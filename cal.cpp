@@ -32,7 +32,7 @@ static int voa2_tm2_IL[51]             = { 0,    5,    10,   15,   20,   25,   3
                                            150,  155,  160,  165,  170,  175,  180,  185,  190,  195,
                                            200,  205,  210,  215,  220,  225,  230,  235,  240,  245,
                                            250                                                        };
-
+#if 0
 int cmd_cal_init(int argc, char **argv)
 {
   byte buf[512];
@@ -82,3 +82,4 @@ int cmd_cal_init(int argc, char **argv)
 
   return 0;
 }
+#endif

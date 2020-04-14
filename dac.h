@@ -13,5 +13,7 @@
 
 int cmd_dac(int argc, char **argv);
 int dac_write(byte addr, byte chan, unsigned int val);
+int dac_read(byte addr, byte *buf);
+int dac_read2(byte addr, byte chan, unsigned int &val);
 
 #endif
