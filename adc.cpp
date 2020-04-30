@@ -86,6 +86,8 @@ unsigned int get_adc_7828(byte chanIdx)
 
   offset = 4 * (chanIdx % 2) + chanIdx / 2;
   offset = 0x84 | (offset << 4);
+  //Serial.print("offset = 0x");
+  //Serial.println(offset, HEX);
 #if 0
   Wire.beginTransmission(KTA7828_ADDR);
   Wire.write(offset);

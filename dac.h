@@ -3,8 +3,14 @@
 
 #include <Wire.h>
 
-#define DAC_ADDR 0xC
+// for 517
+#define DAC_ADDR_517 0xC
 
+// for 364
+#define DAC_ADDR_364_1 0xC
+#define DAC_ADDR_364_2 0xF
+
+// Channel index definition for KTA5625
 #define DAC_CHANNEL_A   0x0
 #define DAC_CHANNEL_B   0x1
 #define DAC_CHANNEL_C   0x2

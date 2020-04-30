@@ -5,7 +5,7 @@
 
 #define EEPROM_WP PB1
 
-// 517
+// 517, 364
 #define EEPROM_ADDR_517 0x57
 
 // 503

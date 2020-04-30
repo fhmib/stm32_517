@@ -149,6 +149,8 @@ int cmd_eeprom(int argc, char **argv)
     eeprom_addr = EEPROM_ADDR_517;
   } else if (board_type == 503) {
     eeprom_addr = EEPROM_ADDR_503;
+  } else if (board_type == 364) {
+    eeprom_addr = EEPROM_ADDR_517;
   }
 
   if (strcmp(argv[1], "read") == 0) {
