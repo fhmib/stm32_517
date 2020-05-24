@@ -2,6 +2,7 @@
 #define _DAC_H_
 
 #include <Wire.h>
+#include <stdint.h>
 
 // for 517
 #define DAC_ADDR_517 0xC
@@ -17,9 +18,9 @@
 #define DAC_CHANNEL_D   0x3
 #define DAC_CHANNEL_ALL 0x4
 
-int cmd_dac(int argc, char **argv);
-int dac_write(byte addr, byte chan, unsigned int val);
-int dac_read(byte addr, byte *buf);
-int dac_read2(byte addr, byte chan, unsigned int &val);
+int32_t cmd_dac(int32_t argc, char **argv);
+int32_t dac_write(byte addr, byte chan, uint32_t val);
+int32_t dac_read(byte addr, byte *buf);
+int32_t dac_read2(byte addr, byte chan, uint32_t &val);
 
 #endif

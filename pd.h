@@ -1,10 +1,13 @@
 #ifndef _PD_H_
 #define _PD_H_
 
-int cmd_pd(int argc, char **argv);
-double get_pd(unsigned int pd_num);
-int cmd_voa(int argc, char **argv);
-double get_voa(unsigned int voa_num);
-void set_voa(unsigned int voa_num, double power);
+#include <stdint.h>
+
+int32_t cmd_pd(int32_t argc, char **argv);
+double get_pd(uint32_t pd_num);
+int32_t cmd_voa(int32_t argc, char **argv);
+double get_voa(uint32_t voa_num);
+void set_voa(uint32_t voa_num, double power);
+int32_t cmd_switch(int32_t argc, char **argv);
 
 #endif

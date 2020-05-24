@@ -1,22 +1,25 @@
 #include "eeprom.h"
+#include "cal.h"
+#include "cmnlib.h"
 #include <HardwareSerial.h>
 
 #define PAGESIZE 16
 
 byte eeprom_buf[512];
+int32_t eeprom_addr;
 
-extern int board_type;
+extern int32_t board_type;
 
-void i2c_eeprom_write_byte(int bus_addr, unsigned int addr, unsigned char data)
+void i2c_eeprom_write_byte(int32_t bus_addr, uint32_t addr, unsigned char data)
 {
-  int rdata = data, err;
+  int32_t rdata = data, err;
   
   digitalWrite(EEPROM_WP, LOW);
 
-  Wire.beginTransmission(bus_addr);
+  Wire.beginTransmission((int)bus_addr);
   Wire.write((int)(addr >> 8));
   Wire.write((int)(addr & 0xff));
-  Wire.write(rdata);
+  Wire.write((int)rdata);
   err = Wire.endTransmission();
   if (err) {
     Serial.print("I2C communication failed, error code = ");
@@ -26,9 +29,9 @@ void i2c_eeprom_write_byte(int bus_addr, unsigned int addr, unsigned char data)
   digitalWrite(EEPROM_WP, HIGH);
 }
 
-void i2c_eeprom_write_buffer(int bus_addr, unsigned int addr, unsigned char *buf, int length)
+void i2c_eeprom_write_buffer(int32_t bus_addr, uint32_t addr, unsigned char *buf, int32_t length)
 {
-  int offset = 0, write_length = 0, byte_addr = 0, i, err;
+  int32_t offset = 0, write_length = 0, byte_addr = 0, i, err;
 
   digitalWrite(EEPROM_WP, LOW);
 
@@ -36,7 +39,7 @@ void i2c_eeprom_write_buffer(int bus_addr, unsigned int addr, unsigned char *buf
     addr += write_length;
     byte_addr = addr % PAGESIZE;
     write_length = min(PAGESIZE - byte_addr, length);
-    Wire.beginTransmission(bus_addr);
+    Wire.beginTransmission((int)bus_addr);
     Wire.write((int)(addr >> 8));
     Wire.write((int)(addr & 0xff));
     for (i = 0; i < write_length; ++i) {
@@ -57,12 +60,12 @@ void i2c_eeprom_write_buffer(int bus_addr, unsigned int addr, unsigned char *buf
   digitalWrite(EEPROM_WP, HIGH);
 }
 
-unsigned char i2c_eeprom_read_byte(int bus_addr, unsigned int addr)
+unsigned char i2c_eeprom_read_byte(int32_t bus_addr, uint32_t addr)
 {
   unsigned char rdata = 0xee;
-  int err;
+  int32_t err;
 
-  Wire.beginTransmission(bus_addr);
+  Wire.beginTransmission((int)bus_addr);
   Wire.write((int)(addr >> 8));
   Wire.write((int)(addr & 0xff));
   err = Wire.endTransmission();
@@ -72,22 +75,22 @@ unsigned char i2c_eeprom_read_byte(int bus_addr, unsigned int addr)
     return 0;
   }
 
-  Wire.requestFrom(bus_addr, 1);
+  Wire.requestFrom((int)bus_addr, 1);
   if (Wire.available()) 
     rdata = Wire.read();
 
   return rdata;
 }
 
-void i2c_eeprom_read_buffer(int bus_addr, unsigned int addr, unsigned char *buf, int length)
+void i2c_eeprom_read_buffer(int32_t bus_addr, uint32_t addr, unsigned char *buf, int32_t length)
 {
-  int read_length = 0, offset = 0, byte_addr = 0, i, err;
+  int32_t read_length = 0, offset = 0, byte_addr = 0, i, err;
   
   while(length > 0) { 
     offset += read_length;
     byte_addr = offset % PAGESIZE;
     read_length = min(PAGESIZE - byte_addr, length);
-    Wire.beginTransmission(bus_addr);
+    Wire.beginTransmission((int)bus_addr);
     Wire.write((int)(addr >> 8));
     Wire.write((int)(addr & 0xff));
     err = Wire.endTransmission();
@@ -97,7 +100,7 @@ void i2c_eeprom_read_buffer(int bus_addr, unsigned int addr, unsigned char *buf,
       return;
     }
 
-   Wire.requestFrom(bus_addr, read_length);
+   Wire.requestFrom((int)bus_addr, read_length);
     for(i = 0; i < read_length; i++) {
       if(Wire.available())
         buf[i + offset] = Wire.read();
@@ -108,16 +111,16 @@ void i2c_eeprom_read_buffer(int bus_addr, unsigned int addr, unsigned char *buf,
   }
 }
 
-void i2c_eeprom_read_buffer2(int bus_addr, unsigned int addr, unsigned char *buf, int length)
+void i2c_eeprom_read_buffer2(int32_t bus_addr, uint32_t addr, unsigned char *buf, int32_t length)
 {
-  int read_length = 0, offset = 0, byte_addr = 0, i, err;
+  int32_t read_length = 0, offset = 0, byte_addr = 0, i, err;
   
   while(length > 0) { 
     offset += read_length;
     byte_addr = offset % PAGESIZE;
     read_length = min(PAGESIZE - byte_addr, length);
 
-    err = Wire.CombinedTrans(bus_addr, addr, 2, read_length);
+    err = Wire.CombinedTrans((int)bus_addr, addr, 2, read_length);
     if (err) {
       Serial.print("Error occured while i2c combined transmission, error = ");
       Serial.println(err);
@@ -134,40 +137,54 @@ void i2c_eeprom_read_buffer2(int bus_addr, unsigned int addr, unsigned char *buf
   }
 }
 
-int cmd_eeprom(int argc, char **argv)
+int32_t cmd_eeprom(int32_t argc, char **argv)
 {
-  unsigned int addr, n, i;
+  uint32_t addr, n, i;
   unsigned char c;
-  int eeprom_addr;
 
-  if (argc != 4) {
-    Serial.println("Wrong arg");
-    return -1;
-  }
-
-  if (board_type == 517) {
-    eeprom_addr = EEPROM_ADDR_517;
-  } else if (board_type == 503) {
-    eeprom_addr = EEPROM_ADDR_503;
-  } else if (board_type == 364) {
-    eeprom_addr = EEPROM_ADDR_517;
-  }
-
-  if (strcmp(argv[1], "read") == 0) {
+  if (argc == 4 && !strcmp(argv[1], "read")) {
     addr = strtoul(argv[2], NULL, 0);
-    n = atoi(argv[3]);
+    n = strtoul(argv[3], NULL, 0);
     i2c_eeprom_read_buffer2(eeprom_addr, addr, eeprom_buf, n);
+    Serial.print("Read from address: 0x");
+    Serial.print(addr, HEX);
     for (i = 0; i < n; ++i) {
+      if (i % 16 == 0) {
+        Serial.println("");
+        Serial.print("0x");
+        Serial.print(i, HEX);
+        Serial.print(": ");
+      }
       Serial.print(eeprom_buf[i], HEX);
       Serial.print(" ");
     }
     Serial.println("");
     return 1;
-  } else if (strcmp(argv[1], "write") == 0) {
+  } else if (argc == 4 && !strcmp(argv[1], "write")) {
     addr = strtoul(argv[2], NULL, 0);
     c = strtoul(argv[3], NULL, 0);
     i2c_eeprom_write_byte(eeprom_addr, addr, c);
     Serial.println("OK");
+  } else if (argc == 2 && !strcmp(argv[1], "dump")) {
+    if (board_type == 364) {
+      n = eeprom_length_for_364;
+      for (i = 0; i < n; ++i) {
+        c = i2c_eeprom_read_byte(eeprom_addr, i);
+        Serial.print(i,DEC);
+        Serial.print(",");
+        Serial.print(i,HEX);
+        Serial.print(",");
+        Serial.print(c, DEC);
+        Serial.print(",");
+        Serial.println(c, HEX);
+        if (i == 0x4F) i = 0x100 - 1;
+        else if (i == 0x104) i = 0x1000 - 1;
+        delay(10);
+      }
+    } else {
+      Serial.println(TECH_ERROR);
+      return -1;
+    }
   } else {
     Serial.println("Wrong arg");
     return -1;

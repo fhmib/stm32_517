@@ -5,37 +5,38 @@
 #include "cmnlib.h"
 
 // for 517
-static unsigned int pd_addr_517[] = { 0x11DD };
-static unsigned int pd_cali_count_517 = 10;
-static unsigned int pd_count_517 = 1;
+uint32_t pd_addr_517[] = { 0x11DD };
+uint32_t pd_cali_count_517 = 10;
+uint32_t pd_count_517 = 1;
 
-static unsigned int voa_addr_517[] = { 0x15E5, 0x181D };
-static unsigned int voa_cali_count_517 = 51;
-static unsigned int voa_count_517 = 2;
+uint32_t voa_addr_517[] = { 0x15E5, 0x181D };
+uint32_t voa_cali_count_517 = 51;
+uint32_t voa_count_517 = 2;
 
 // for 503
   // PD1 = 0x150D, PD2 = 0x11AD, PD3 = 0x12CD
-static unsigned int pd_addr_503[] = { 0x150D, 0x11AD, 0x12CD };
-static unsigned int pd_cali_count_503 = 16;
-static unsigned int pd_count_503 = 3;
+uint32_t pd_addr_503[] = { 0x150D, 0x11AD, 0x12CD };
+uint32_t pd_cali_count_503 = 16;
+uint32_t pd_count_503 = 3;
 
 // for 364
   // LIN1 = 0x11DD, LIN2 = 0x12CD, LOUT1 = 0x13BD, LOUT2 = 0x14AD, AM1 = 0x159D
-static unsigned int pd_addr_364[] = { 0x11DD, 0x12CD, 0x13BD, 0x14AD, 0x159D};
-static unsigned int pd_cali_count_364 = 10;
-static unsigned int pd_count_364 = 5;
+uint32_t pd_addr_364[] = { 0x11DD, 0x12CD, 0x13BD, 0x14AD, 0x159D};
+uint32_t pd_cali_count_364 = 10;
+uint32_t pd_count_364 = 5;
   // A_TM2 = 0x19CD, A_TM1 = 0x1C05, B_TM2 = 0x1E3D, B_TM1 = 0x2075, LOUT1 = 0x22AD, LOUT2 = 0x24E5, LIN1 = 0x271D, LIN2 = 0x2955
-static unsigned int voa_addr_364[] = { 0x271D, 0x2955, 0x1C05, 0x2075, 0x22AD, 0x24E5, 0x19CD, 0x1E3D};
-static unsigned int voa_cali_count_364 = 51;
-static unsigned int voa_count_364 = 8;
+uint32_t voa_addr_364[] = { 0x271D, 0x2955, 0x1C05, 0x2075, 0x22AD, 0x24E5, 0x19CD, 0x1E3D};
+uint32_t voa_cali_count_364 = 51;
+uint32_t voa_count_364 = 8;
 
 
 extern int board_type;
+extern int eeprom_addr;
 
-int cmd_pd(int argc, char **argv)
+int32_t cmd_pd(int32_t argc, char **argv)
 {
-  unsigned int pd_num;
-  unsigned int pd_count = 0;
+  uint32_t pd_num;
+  uint32_t pd_count = 0;
   double pd;
 
   if (board_type == 517) {
@@ -45,7 +46,7 @@ int cmd_pd(int argc, char **argv)
   } else if (board_type == 364) {
     pd_count = pd_count_364;
   } else {
-    Serial.println("SERIOUS ERROR: Invalid board type! Please inform the technician");
+    Serial.println(TECH_ERROR);
     return -1;
   }
 
@@ -73,15 +74,14 @@ int cmd_pd(int argc, char **argv)
   return -1;
 }
 
-double get_pd(unsigned int pd_num)
+double get_pd(uint32_t pd_num)
 {
-  int channel, adc1, adc2, offset, pd_raw, eeprom_addr;
+  int32_t channel, adc1, adc2, offset, pd_raw;
   double power1, power2;
-  unsigned int *pd_addr_array = NULL;
-  unsigned int pd_cali_count;
+  uint32_t *pd_addr_array = NULL;
+  uint32_t pd_cali_count;
 
   if (board_type == 517) {
-    eeprom_addr = EEPROM_ADDR_517;
     pd_addr_array = pd_addr_517;
     pd_cali_count = pd_cali_count_517;
     switch(pd_num) {
@@ -93,7 +93,6 @@ double get_pd(unsigned int pd_num)
       return 0;
     }
   } else if (board_type == 503) {
-    eeprom_addr = EEPROM_ADDR_503;
     pd_addr_array = pd_addr_503;
     pd_cali_count = pd_cali_count_503;
     switch(pd_num) {
@@ -111,7 +110,6 @@ double get_pd(unsigned int pd_num)
       return 0;
     }
   } else if (board_type == 364) {
-    eeprom_addr = EEPROM_ADDR_517;
     pd_addr_array = pd_addr_364;
     pd_cali_count = pd_cali_count_364;
     switch(pd_num) {
@@ -135,7 +133,7 @@ double get_pd(unsigned int pd_num)
       return 0;
     }
   } else {
-    Serial.println("SERIOUS ERROR: Invalid board type! Please inform the technician");
+    Serial.println(TECH_ERROR);
     return 0;
   }
 
@@ -154,12 +152,12 @@ double get_pd(unsigned int pd_num)
 
   ++offset;
   while ((adc2 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + offset * 8)) < pd_raw) {
-    if (offset > pd_cali_count - 2) break;
-    ++offset;
+    if (++offset > pd_cali_count - 1)
+      break;
     adc1 = adc2;
   }
-  power1 = (double)((int)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + (offset - 1) * 8)) / 10;
-  power2 = (double)((int)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + offset * 8)) / 10;
+  power1 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + (offset - 1) * 8)) / 10;
+  power2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + offset * 8)) / 10;
 
   if (adc1 == adc2 || power1 == power2) {
     Serial.println("It needs calibration data in eeprom, read failed");
@@ -169,10 +167,10 @@ double get_pd(unsigned int pd_num)
   return (pd_raw - adc1) * (power2 - power1) / (adc2 - adc1) + power1;
 }
 
-int cmd_voa(int argc, char **argv)
+int32_t cmd_voa(int32_t argc, char **argv)
 {
-  unsigned int voa_num;
-  unsigned int voa_count = 0;
+  uint32_t voa_num;
+  uint32_t voa_count = 0;
   double atten;
 
   if (board_type == 517) {
@@ -180,7 +178,7 @@ int cmd_voa(int argc, char **argv)
   } else if (board_type == 364) {
     voa_count = voa_count_364;
   } else {
-    Serial.println("SERIOUS ERROR: Invalid board type! Please inform the technician");
+    Serial.println(TECH_ERROR);
     return -1;
   }
 
@@ -210,15 +208,14 @@ int cmd_voa(int argc, char **argv)
   return -1;
 }
 
-double get_voa(unsigned int voa_num)
+double get_voa(uint32_t voa_num)
 {
-  int channel, adc1, adc2, offset, voa_raw, eeprom_addr;
+  int32_t channel, adc1, adc2, offset, voa_raw;
   double atten1, atten2;
-  unsigned int *voa_addr_array = NULL;
-  unsigned int voa_cali_count;
+  uint32_t *voa_addr_array = NULL;
+  uint32_t voa_cali_count;
 
   if (board_type == 517) {
-    eeprom_addr = EEPROM_ADDR_517;
     voa_addr_array = voa_addr_517;
     voa_cali_count = voa_cali_count_517;
     switch(voa_num) {
@@ -233,7 +230,6 @@ double get_voa(unsigned int voa_num)
       return 0;
     }
   } else if (board_type == 364) {
-    eeprom_addr = EEPROM_ADDR_517;
     voa_addr_array = voa_addr_364;
     voa_cali_count = voa_cali_count_364;
     switch(voa_num) {
@@ -266,7 +262,7 @@ double get_voa(unsigned int voa_num)
       return 0;
     }
   } else {
-    Serial.println("SERIOUS ERROR: Invalid board type! Please inform the technician");
+    Serial.println(TECH_ERROR);
     return 0;
   }
 
@@ -280,12 +276,12 @@ double get_voa(unsigned int voa_num)
   offset = 1;
   
   while ((adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8)) > voa_raw) {
-    if (offset > voa_cali_count - 2) break;
-    ++offset;
+    if (++offset > voa_cali_count - 1)
+      break;
     adc1 = adc2;
   }
-  atten1 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + (offset - 1) * 8)) / 10;
-  atten2 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10;
+  atten1 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + (offset - 1) * 8)) / 10;
+  atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10;
 
   if (adc1 == adc2 || atten1 == atten2) {
     Serial.println("It needs calibration data in eeprom, read failed");
@@ -306,16 +302,15 @@ double get_voa(unsigned int voa_num)
   return (double)(voa_raw - adc1) * (atten2 - atten1) / (double)(adc2 - adc1) + atten1;
 }
 
-void set_voa(unsigned int voa_num, double atten)
+void set_voa(uint32_t voa_num, double atten)
 {
-  int channel, adc1, adc2, adc_act, offset, eeprom_addr;
+  int32_t channel, adc1, adc2, adc_act, offset;
   double atten1, atten2;
-  unsigned int *voa_addr_array = NULL;
-  unsigned int voa_cali_count;
+  uint32_t *voa_addr_array = NULL;
+  uint32_t voa_cali_count;
   byte dac_addr;
 
   if (board_type == 517) {
-    eeprom_addr = EEPROM_ADDR_517;
     voa_addr_array = voa_addr_517;
     voa_cali_count = voa_cali_count_517;
     switch(voa_num) {
@@ -331,7 +326,6 @@ void set_voa(unsigned int voa_num, double atten)
     }
     dac_addr = DAC_ADDR_517;
   } else if (board_type == 364) {
-    eeprom_addr = EEPROM_ADDR_517;
     voa_addr_array = voa_addr_364;
     voa_cali_count = voa_cali_count_364;
     switch(voa_num) {
@@ -372,16 +366,16 @@ void set_voa(unsigned int voa_num, double atten)
       return;
     }
   } else {
-    Serial.println("SERIOUS ERROR: Invalid board type! Please inform the technician");
+    Serial.println(TECH_ERROR);
     return;
   }
 
-  atten1 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4)) / 10;
+  atten1 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4)) / 10;
   offset = 1;
   
-  while ((atten2 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10) < atten) {
-    if (offset > voa_cali_count - 2) break;
-    ++offset;
+  while ((atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10) < atten) {
+    if (++offset > voa_cali_count - 1)
+      break;
     atten1 = atten2;
   }
   adc1 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + (offset - 1) * 8);
@@ -418,4 +412,62 @@ void set_voa(unsigned int voa_num, double atten)
   Serial.println("OK");
 
   return ;
+}
+
+int32_t cmd_switch(int32_t argc, char **argv)
+{
+  uint32_t switch_num;
+  uint32_t switch_state;
+  byte out_pin, in_pin;
+
+  if (argc < 3) {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+
+  if (board_type == 364) {
+    switch_num = strtoul(argv[1], NULL, 0);
+    if (switch_num != 1) {
+      Serial.println("Invalid switch number");
+      return -1;
+    }
+    out_pin = PB13;
+    pinMode(out_pin, OUTPUT);
+    in_pin = PB9;
+    pinMode(in_pin, INPUT);
+  } else {
+    Serial.println(TECH_ERROR);
+    return -1;
+  }
+
+  if (argc == 3 && !strcmp(argv[2], "read")) {
+    switch_state = digitalRead(in_pin);
+    if (switch_state == 0) {
+      Serial.println("Switch is set to LIN2");
+    } else {
+      Serial.println("Switch is set to LIN1");
+    }
+    return 0;
+  } else if (argc == 4 && !strcmp(argv[2], "write")) {
+    switch_state = strtoul(argv[3], NULL, 0);
+    if (switch_state == 0 || switch_state > 2) {
+      Serial.println("Invalid switch state");
+      return -1;
+    }
+
+    if (switch_state == 1) {
+      digitalWrite(out_pin, HIGH); //LIN1
+    } else {
+      digitalWrite(out_pin, LOW); //LIN2
+    }
+
+    Serial.print("Switch to ");
+    Serial.print(switch_state);
+    Serial.println(" OK");
+
+    return 0;
+  }
+
+  Serial.println("Wrong arg");
+  return -1;
 }

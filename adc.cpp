@@ -1,8 +1,8 @@
 #include "adc.h"
 
-int cmd_adc(int argc, char **argv)
+int32_t cmd_adc(int32_t argc, char **argv)
 {
-  unsigned int channel, result;
+  uint32_t channel, result;
 
   if (argc == 3 && !strcmp(argv[2], "read")) {
     channel = strtoul(argv[1], NULL, 0);
@@ -24,7 +24,7 @@ int cmd_adc(int argc, char **argv)
   return -1;
 }
 
-unsigned int ReadChannelDigital(byte chanIdx)
+uint32_t ReadChannelDigital(byte chanIdx)
 {
   byte s1, s2;
   byte r1, r2, rChanIdx;
@@ -55,9 +55,9 @@ unsigned int ReadChannelDigital(byte chanIdx)
   return ((r1 & 0xf) << 8) | r2;
 }
 
-int cmd_adc_7828(int argc, char **argv)
+int32_t cmd_adc_7828(int32_t argc, char **argv)
 {
-  unsigned int channel, result;
+  uint32_t channel, result;
 
   if (argc == 3 && !strcmp(argv[2], "read")) {
     channel = strtoul(argv[1], NULL, 0);
@@ -79,9 +79,9 @@ int cmd_adc_7828(int argc, char **argv)
   return -1;
 }
 
-unsigned int get_adc_7828(byte chanIdx)
+uint32_t get_adc_7828(byte chanIdx)
 {
-  int  offset, error, i = 0;
+  int32_t offset, error, i = 0;
   char adc[2];
 
   offset = 4 * (chanIdx % 2) + chanIdx / 2;

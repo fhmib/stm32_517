@@ -2,10 +2,10 @@
 
 extern int board_type;
 
-int cmd_dac(int argc, char **argv)
+int32_t cmd_dac(int32_t argc, char **argv)
 {
   byte channel, addr;
-  unsigned int val;
+  uint32_t val;
 
   if (argc == 4 && !strcmp(argv[2], "write")) {
     if (board_type == 517) {
@@ -104,10 +104,10 @@ int cmd_dac(int argc, char **argv)
   return -1;
 }
 
-int dac_write(byte addr, byte chan, unsigned int val)
+int32_t dac_write(byte addr, byte chan, uint32_t val)
 {
   byte cmd, data1, data2;
-  int err;
+  int32_t err;
 
   cmd = (0x3 << 3) | chan;
   data1 = (byte)(val >> 4); 
@@ -127,24 +127,24 @@ int dac_write(byte addr, byte chan, unsigned int val)
   return 0;
 }
 
-int dac_read(byte addr, byte *buf)
+int32_t dac_read(byte addr, byte *buf)
 {
-    int i;
-
-    Wire.requestFrom(addr, 3);
-    for (i = 0; i < 3; i++) {
-      if (Wire.available()) {
-        buf[i] = Wire.read();
-      }
+  int32_t i;
+  
+  Wire.requestFrom(addr, 3);
+  for (i = 0; i < 3; i++) {
+    if (Wire.available()) {
+      buf[i] = Wire.read();
     }
-
-    return 0;
+  }
+  
+  return 0;
 }
 #if 0
-int dac_read2(byte addr, byte chan, unsigned int &val)
+int32_t dac_read2(byte addr, byte chan, uint32_t &val)
 {
-    int err, i;
-    int cmd = (0x3 << 3) | chan;
+    int32_t err, i;
+    int32_t cmd = (0x3 << 3) | chan;
     uint8 buf[3];
 
     err = Wire.CombinedTrans(addr, cmd, 1, 3);

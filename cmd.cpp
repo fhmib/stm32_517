@@ -1,9 +1,9 @@
 #include "cmd.h"
 #include <HardwareSerial.h>
 
-int cmd_help(int argc, char **argv)
+int32_t cmd_help(int32_t argc, char **argv)
 {
-  int i;
+  int32_t i;
   for (i=0;;i++)
   {
     Serial.print("cmd: ");
@@ -19,16 +19,16 @@ int cmd_help(int argc, char **argv)
   return 0;
 }
 
-int process_cmd(const char *buf)
+int32_t process_cmd(const char *buf)
 {
-  int i, argc = 0;
+  int32_t i, argc = 0;
   char *_argv[32];
   char **argv = &_argv[0];
 
-  char* p = strtok((char*)buf," ");
+  char* p = strtok((char*)buf," \t");
   while (p) {
     argv[argc++] = p;
-    p = strtok(NULL, " ");
+    p = strtok(NULL, " \t");
   }
 
   if (argc == 0)
