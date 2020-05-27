@@ -6,7 +6,7 @@
 #include "eeprom.h"
 
 #define LED_PORT PB12
-#define VER "0.0.7"
+#define VER "0.1.0"
 #define LED_HOLD_TIME 500 // ms
 
 uint32_t led_count;
@@ -14,6 +14,7 @@ String cmd = "";
 char c;
 int32_t board_type = -1;
 extern int32_t eeprom_addr;
+char sel_board_str[] = "Supported boards: 503 517 364";
 
 void setup()
 {
@@ -35,9 +36,8 @@ void setup()
   Serial.print("Version: ");
   Serial.println(VER);
   Serial.println("COM is ready");
-  Serial.println("");
-  Serial.println("Supported boards: 503 517 364");
- //Serial.print(">");
+  Serial.println(sel_board_str);
+  Serial.println();
   Serial.print("Please input board type > ");
 }
 
@@ -92,7 +92,7 @@ void loop()
 
 }
 
-console_cmd cmdlist[20];
+console_cmd cmdlist[25];
 
 console_cmd cmdlist_517[] =
 {
@@ -124,8 +124,10 @@ console_cmd cmdlist_364[] =
   {"table_init", cmd_table_init, "cmd_table_init", "cmd_table_init"},
   {"file_name", cmd_file_name, "file_name write <name>", "file_name write M+3.PAR"},
   {"file_version", cmd_file_version, "file_version write <year> <> ...", "file_version write 2020 5 24 16 34 0 0"},
-  {"cal", cmd_cal, "cal voa<num>/pd<num> <adc> <value>, cal voa<num>/pd<num> dump", "cal voa3 2 2034 4.5, cal voa3 dump"},
-  
+  {"cal", cmd_cal, "cal voa<num>/pd<num>/... <adc> <value>, cal voa<num>/pd<num>/... dump", "cal voa3 2 2034 4.5, cal voa3 dump"},
+  {"table_cplt", cmd_table_cplt, "cmd_table_init", "cmd_table_init"},
+  {"table_backup", cmd_table_backup, "cmd_table_init", "cmd_table_init"},
+
   {"dac", cmd_dac, "dac <channel> write <value>, dac read", "dac 1 write 1300, dac read"},
   {"adc", cmd_adc, "adc <channel> read", "adc 0 read"},
   {"eeprom", cmd_eeprom, "eeprom read <addr> <length>, eeprom write <addr> <val>", "eeprom read 0x0 10, eeprom write 0x0 0x10"},

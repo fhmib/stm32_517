@@ -2,27 +2,17 @@
 #include "cmnlib.h"
 #include "eeprom.h"
 
-#define TAG_MAX_LENGTH_364 16
-
 tag_addr_stu tag_addr;
 
 extern int32_t eeprom_addr;
 extern int32_t board_type;
-
-extern uint32_t pd_addr_364[];
-extern uint32_t pd_cali_count_364;
-extern uint32_t pd_count_364;
-
-extern uint32_t voa_addr_364[];
-extern uint32_t voa_cali_count_364;
-extern uint32_t voa_count_364;
-
 
 #define EEPROM_HEADER_OFFSET           0x1000
 #define FILE_HEADER_OFFSET1            0x1040
 #define FILE_HEADER_OFFSET2            0x1070
 #define CAL_HEADER_OFFSET1             0x10c0
 #define CAL_HEADER_OFFSET2             0x10e0
+#define EEPROM_BACKUP_OFFSET           0x4000
 
 #define FILE_NAME_OFFSET               0x1050
 #define FILE_PURE_DATA_CHKSUM          0x1070
@@ -40,17 +30,13 @@ unsigned char cal_header[32] =    {0x3c,0x5f,0x54,0x48,0x49,0x53,0x5f,0x49,0x53,
                                    0x4c,0x45,0x5f,0x43,0x48,0x45,0x43,0x4b,0x5f,0x48,0x45,0x41,0x44,0x5f,0x3e, 0x0};
 
 // different content for each board
+#define TAG_MAX_LENGTH_364 16
+
 unsigned char cal_header2_for_364[] =      {   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x01,0x00,0x10,0x01,
                                             0x0A,0x01,0x02,0x0A,0x01,0x03,0x0A,0x01,0x04,0x0A,0x01,0x05,0x0A,0x01,0x06,0x18,
                                             0x00,0x07,0x10,0x01,0x08,0x10,0x01,0x09,0x33,0x01,0x0A,0x33,0x01,0x0B,0x33,0x01,
                                             0x0C,0x33,0x01,0x0D,0x33,0x01,0x0E,0x33,0x01,0x0F,0x33,0x01,0x10,0x33,0x01};
 uint32_t cal_header2_length_364 = 63;
-
-
-
-                    //                       0,    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x01, 0x0,0x08,0x01,
-                    //                    0x10,0x01,0x02,0x10,0x01,0x03,0x10,0x01,0x04,0x10,0x01,0x05,0x10,0x01,0x06,0x10,
-                    //                    0x01,0x07,0x10,0x01,0x08,0x0b,0x01,   0,   0,   0,  0,    0,   0};
 
 uint32_t file_length_for_364 = 0x1A2D;
 uint32_t eeprom_length_for_364 = 10989;
@@ -62,7 +48,16 @@ uint32_t pd_power_min_for_364[] = {0xFFFFFEA2, 0xFFFFFEA2, 0xFFFFFF9C, 0xFFFFFF9
 char voa_header_name_for_364[8][6] = {"VOA7\n", "VOA8\n", "VOA2\n", "VOA4\n", "VOA5\n", "VOA6\n", "VOA1\n", "VOA3\n"};
 
 char others_header_name_for_364[3][20] = {"INSERTION LOSS\n", "VOLTAGE_K_B\n", "VOLTAGE_THRESHOLD\n"};
-uint32_t others_addr_364[] = { 0x15ED, 0x16ED, 0x180D };
+uint32_t others_addr_364[] = { 0x168D, 0x178D, 0x18AD };
+uint32_t others_cali_count_364[] = { 0xC, 0x10, 0x10 }; // 1 = 8byte
+
+extern uint32_t pd_addr_364[];
+extern uint32_t pd_cali_count_364;
+extern uint32_t pd_count_364;
+
+extern uint32_t voa_addr_364[];
+extern uint32_t voa_cali_count_364;
+extern uint32_t voa_count_364;
 
 void table_init_for_364()
 {
@@ -106,7 +101,7 @@ void table_init_for_364()
     offset += 8;
     i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)pd_header_name_for_364[i], strlen(pd_header_name_for_364[i]));
     offset += strlen(pd_header_name_for_364[i]);
-    write_byte_to_eeprom(eeprom_addr, offset, 0, pd_addr_364[i] - offset);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, pd_addr_364[i] - offset + pd_cali_count_364 * 8);
     offset = pd_addr_364[i] - 4 * 5;
     write_32_to_eeprom(eeprom_addr, offset, pd_power_max_for_364[i]);
     offset = pd_addr_364[i] - 4 * 2;
@@ -121,18 +116,18 @@ void table_init_for_364()
     offset += 8;
     i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)voa_header_name_for_364[i], strlen(voa_header_name_for_364[i]));
     offset += strlen(voa_header_name_for_364[i]);
-    write_byte_to_eeprom(eeprom_addr, offset, 0, voa_addr_364[i] - offset);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, voa_addr_364[i] - offset + voa_cali_count_364 * 8);
   }
   Serial.println("voa header completed");
 
   // other tables
   for (i = 0; i < 3; ++i) {
-    offset = others_addr_364[i];
+    offset = others_addr_364[i] - 0xA0;
     write_byte_to_eeprom(eeprom_addr, offset, 0, 8);
     offset += 8;
     i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)others_header_name_for_364[i], strlen(others_header_name_for_364[i]));
     offset += strlen(others_header_name_for_364[i]);
-    write_byte_to_eeprom(eeprom_addr, offset, 0, others_addr_364[i] + 0xA0 - offset);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, others_addr_364[i] - offset + others_cali_count_364[i] * 8);
   }
   Serial.println("others header completed");
 
@@ -148,6 +143,144 @@ int32_t cmd_table_init(int32_t argc, char **argv)
       Serial.println(TECH_ERROR);
       return -1;
     }
+  } else {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+}
+
+void table_cplt()
+{
+  uint32_t sum, i, j, offset = 0, file_length;
+  int32_t value, value1_max, value1_min, value2_max, value2_min, value2_sub;
+
+  uint32_t obj_count;
+  uint32_t *obj_addr_array = NULL;
+  uint32_t obj_cali_count;
+
+  // pd table header
+  if (board_type == 364) {
+    obj_count = pd_count_364;
+    obj_addr_array = pd_addr_364;
+    obj_cali_count = pd_cali_count_364;
+  } else {
+    Serial.println(TECH_ERROR);
+    return;
+  }
+  for (i = 0; i < obj_count; ++i) {
+    value1_max = 0; value1_min = 0; value2_max = 0; value2_min = 0; j = 0;
+    offset = obj_addr_array[i];
+
+    value1_max = value1_min = (int32_t)get_32_from_eeprom(eeprom_addr, offset);
+    offset += 8;
+    ++j;
+
+    do {
+      value = (int32_t)get_32_from_eeprom(eeprom_addr, offset);
+      if (value > value1_max) value1_max = value;
+      if (value < value1_min) value1_min = value;
+      offset += 8;
+    } while (++j < obj_cali_count);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 6, value1_max);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 3, value1_min);
+  }
+  Serial.println("pd table completed");
+
+  // voa table header
+  if (board_type == 364) {
+    obj_count = voa_count_364;
+    obj_addr_array = voa_addr_364;
+    obj_cali_count = voa_cali_count_364;
+  } else {
+    Serial.println(TECH_ERROR);
+    return;
+  }
+  for (i = 0; i < obj_count; ++i) {
+    value1_max = 0; value1_min = 0; value2_max = 0; value2_min = 0; j = 0;
+    offset = obj_addr_array[i];
+    value2_sub = MY_SUB((int32_t)get_32_from_eeprom(eeprom_addr, offset + 4), (int32_t)get_32_from_eeprom(eeprom_addr, offset + 4 + 8));
+
+    value1_max = value1_min = (int32_t)get_32_from_eeprom(eeprom_addr, offset);
+    value2_max = value2_min = (int32_t)get_32_from_eeprom(eeprom_addr, offset + 4);
+    offset += 8;
+    ++j;
+
+    do {
+      value = (int32_t)get_32_from_eeprom(eeprom_addr, offset);
+      if (value > value1_max) value1_max = value;
+      if (value < value1_min) value1_min = value;
+      value = get_32_from_eeprom(eeprom_addr, offset + 4);
+      if (value > value2_max) value2_max = value;
+      if (value < value2_min) value2_min = value;
+      offset += 8;
+    } while (++j < obj_cali_count);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 6, value1_max);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 3, value1_min);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 5, value2_max);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 2, value2_min);
+    write_32_to_eeprom(eeprom_addr, obj_addr_array[i] - 4 * 1, value2_sub);
+  }
+  Serial.println("voa table completed");
+
+  // calculate checksum
+  if (board_type == 364) {
+    file_length = file_length_for_364;
+  } else {
+    Serial.println(TECH_ERROR);
+    return;
+  }
+  sum = cal_checksum_32(CAL_HEADER_OFFSET1, file_length);
+  write_32_to_eeprom(eeprom_addr, FILE_PURE_DATA_CHKSUM, sum);
+  sum = cal_checksum_32(FILE_HEADER_OFFSET1, 0x10 * 8 - 4);
+  write_32_to_eeprom(eeprom_addr, FILE_HEADER_CHKSUM, sum);
+  Serial.println("Calculate sum completed");
+}
+
+int32_t cmd_table_cplt(int32_t argc, char **argv)
+{
+  if(argc == 1) {
+    table_cplt();
+    return 0;
+  } else {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+}
+
+void table_backup()
+{
+  uint32_t file_length, offset, every_len;
+  unsigned char buf[512];
+
+  if (board_type == 364) {
+    file_length = file_length_for_364 + 0xC0;
+  } else {
+    Serial.println(TECH_ERROR);
+    return;
+  }
+
+  offset = 0;
+  while (offset < file_length) {
+    every_len = (offset + 512 < file_length) ? 512 : file_length - offset;
+    Serial.print("Copy ");
+    Serial.print(every_len, DEC);
+    Serial.print(" data from 0x");
+    Serial.print(EEPROM_HEADER_OFFSET + offset, HEX);
+    Serial.print(" to 0x");
+    Serial.println(EEPROM_BACKUP_OFFSET + offset, HEX);
+    i2c_eeprom_read_buffer(eeprom_addr, EEPROM_HEADER_OFFSET + offset, buf, every_len);
+    i2c_eeprom_write_buffer(eeprom_addr, EEPROM_BACKUP_OFFSET + offset, buf, every_len);
+    offset += every_len;
+  }
+
+  Serial.println("Done.");
+}
+
+int32_t cmd_table_backup(int32_t argc, char **argv)
+{
+  if(argc == 1) {
+    table_backup();
+    return 0;
   } else {
     Serial.println("Wrong arg");
     return -1;
@@ -306,7 +439,7 @@ int32_t cal_voa(int32_t argc, char **argv)
 
   if (!strcmp(argv[2], "dump")) {
     addr = voa_addr_array[num - 1];
-    dump_cali(addr, voa_cali_count);
+    dump_cali(addr, voa_cali_count, DUMP_MODE_VOA);
     return 0;
   }
 
@@ -361,7 +494,7 @@ int32_t cal_pd(int32_t argc, char **argv)
 
   if (!strcmp(argv[2], "dump")) {
     addr = pd_addr_array[num - 1];
-    dump_cali(addr, pd_cali_count);
+    dump_cali(addr, pd_cali_count, DUMP_MODE_PD);
     return 0;
   }
 
@@ -389,33 +522,240 @@ int32_t cal_pd(int32_t argc, char **argv)
   return 0;
 }
 
+int32_t cal_il(int32_t argc, char **argv)
+{
+  uint32_t cal_num;
+  uint32_t il_addr;
+  uint32_t il_cali_count;
+  uint32_t addr;
+  int32_t power;
+  double power_raw;
+
+  if (board_type == 364) {
+    il_addr = others_addr_364[0];
+    il_cali_count = others_cali_count_364[0] * 2;
+  } else {
+    Serial.println(TECH_ERROR);
+    return -1;
+  }
+
+  if (!strcmp(argv[2], "dump")) {
+    addr = il_addr;
+    dump_cali(addr, il_cali_count, DUMP_MODE_IL);
+    return 0;
+  }
+
+  if (argc != 4) {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+
+  cal_num = strtoul(argv[2], NULL, 10);
+  if (cal_num < 1 || cal_num > il_cali_count) {
+    Serial.println("Wrong cali number");
+    return -1;
+  }
+  power_raw = atof(argv[3]) * 10;
+  if (power_raw > 0)
+    power = (int32_t)(power_raw + 0.5);
+  else
+    power = (int32_t)(power_raw - 0.5);
+
+  addr = il_addr + (cal_num - 1) * 4;
+  write_32_to_eeprom(eeprom_addr, addr, power);
+
+  return 0;
+}
+
+int32_t cal_vkb(int32_t argc, char **argv)
+{
+  uint32_t cal_num;
+  uint32_t vkb_addr;
+  uint32_t vkb_cali_count;
+  uint32_t addr;
+  unsigned char buf[4];
+  float raw;
+  uint32_t *pp = (uint32_t*)&raw;
+
+  if (board_type == 364) {
+    vkb_addr = others_addr_364[1];
+    vkb_cali_count = others_cali_count_364[1];
+  } else {
+    Serial.println(TECH_ERROR);
+    return -1;
+  }
+
+  if (!strcmp(argv[2], "dump")) {
+    addr = vkb_addr;
+    dump_cali(addr, vkb_cali_count, DUMP_MODE_VKB);
+    return 0;
+  }
+
+  if (argc != 5) {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+
+  cal_num = strtoul(argv[2], NULL, 10);
+  if (cal_num < 1 || cal_num > vkb_cali_count) {
+    Serial.println("Wrong cali number");
+    return -1;
+  }
+
+  addr = vkb_addr + (cal_num - 1) * 8;
+
+  raw = atof(argv[3]);  
+  buf[0] = (*pp >> 24) & 0xFF;
+  buf[1] = (*pp >> 16) & 0xFF;
+  buf[2] = (*pp >> 8) & 0xFF;
+  buf[3] = (*pp >> 0) & 0xFF;
+  i2c_eeprom_write_buffer(eeprom_addr, addr, buf, 4);
+
+  raw = atof(argv[4]);
+  buf[0] = (*pp >> 24) & 0xFF;
+  buf[1] = (*pp >> 16) & 0xFF;
+  buf[2] = (*pp >> 8) & 0xFF;
+  buf[3] = (*pp >> 0) & 0xFF;
+  i2c_eeprom_write_buffer(eeprom_addr, addr + 4, buf, 4);
+
+  return 0;
+}
+
+int32_t cal_vt(int32_t argc, char **argv)
+{
+  uint32_t cal_num;
+  uint32_t vt_addr;
+  uint32_t vt_cali_count;
+  uint32_t addr;
+  int32_t voltage;
+  float voltage_raw;
+
+  if (board_type == 364) {
+    vt_addr = others_addr_364[2];
+    vt_cali_count = others_cali_count_364[2];
+  } else {
+    Serial.println(TECH_ERROR);
+    return -1;
+  }
+
+  if (!strcmp(argv[2], "dump")) {
+    addr = vt_addr;
+    dump_cali(addr, vt_cali_count, DUMP_MODE_VT);
+    return 0;
+  }
+
+  if (argc != 5) {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+
+  cal_num = strtoul(argv[2], NULL, 10);
+  if (cal_num < 1 || cal_num > vt_cali_count) {
+    Serial.println("Wrong cali number");
+    return -1;
+  }
+
+  addr = vt_addr + (cal_num - 1) * 8;
+
+  voltage_raw = atof(argv[3]) * 100;  
+  if (voltage_raw > 0)
+    voltage = (int32_t)(voltage_raw + 0.5);
+  else
+    voltage = (int32_t)(voltage_raw - 0.5);
+  write_32_to_eeprom(eeprom_addr, addr, voltage);
+
+  voltage_raw = atof(argv[4]) * 100;  
+  if (voltage_raw > 0)
+    voltage = (int32_t)(voltage_raw + 0.5);
+  else
+    voltage = (int32_t)(voltage_raw - 0.5);
+  write_32_to_eeprom(eeprom_addr, addr + 4, voltage);
+
+  return 0;
+}
+
 int32_t cmd_cal(int32_t argc, char **argv)
 {
-  if ((argc > 2 && strncmp(argv[1], "voa", 3) == 0 && strlen(argv[1]) > 3)) {
+  unsigned char cvoa = 0, cpd = 0, cil = 0, cvkb = 0, cvt = 0;
+  if (board_type == 364) {
+    cvoa = 1; cpd = 1; cil = 1; cvkb = 1; cvt = 1;
+  } else {
+    Serial.println(TECH_ERROR);
+    return -1;
+  }
+
+  if (argc < 3) {
+    Serial.println("Wrong arg");
+    return -1;
+  }
+
+  if (cvoa && strncmp(argv[1], "voa", 3) == 0 && strlen(argv[1]) > 3) {
     return cal_voa(argc, argv);
-  } else if (strncmp(argv[1], "pd", 2) == 0 && strlen(argv[1]) > 2) {
+  } else if (cpd && strncmp(argv[1], "pd", 2) == 0 && strlen(argv[1]) > 2) {
     return cal_pd(argc, argv);
+  } else if (cil && strncmp(argv[1], "il", 2) == 0) {
+    return cal_il(argc, argv);
+  } else if (cvkb && strncmp(argv[1], "vkb", 3) == 0) {
+    return cal_vkb(argc, argv);
+  } else if (cvt && strncmp(argv[1], "vt", 2) == 0) {
+    return cal_vt(argc, argv);
   } else {
     Serial.println("Wrong arg");
     return -1;
   }
 }
 
-void dump_cali(uint32_t addr, uint32_t count)
+void dump_cali(uint32_t addr, uint32_t count, unsigned char mode)
 {
   uint32_t i;
   int32_t val;
-  double val_d;
+  float val_f, *pf = (float*)&val;
 
   Serial.print("Dump from addr 0x");
   Serial.println(addr, HEX);
-  for (i = 0; i < count; ++i) {
-    val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8);
-    Serial.print(val, DEC);
-    Serial.print(" ");
-    val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8 + 4);
-    val_d = (double)((double)val / 10);
-    Serial.println(val_d);
+  if (mode == DUMP_MODE_IL) {
+    for (i = 0; i < count; ++i) {
+      Serial.print(i + 1);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 4);
+      val_f = (float)((double)val / 10);
+      Serial.println(val_f);
+    }
+  } else if (mode == DUMP_MODE_VKB) {
+    for (i = 0; i < count; ++i) {
+      Serial.print(i + 1);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8);
+      val_f = *pf;
+      Serial.print(val_f);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8 + 4);
+      val_f = *pf;
+      Serial.println(val_f);
+    }
+  } else if (mode == DUMP_MODE_VT) {
+    for (i = 0; i < count; ++i) {
+      Serial.print(i + 1);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8);
+      val_f = (float)((float)val / 100);
+      Serial.print(val_f);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8 + 4);
+      val_f = (float)((float)val / 100);
+      Serial.println(val_f);
+    }
+  } else {
+    for (i = 0; i < count; ++i) {
+      Serial.print(i + 1);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8);
+      Serial.print(val, DEC);
+      Serial.print(",");
+      val = (int32_t)get_32_from_eeprom(eeprom_addr, addr + i * 8 + 4);
+      val_f = (float)((float)val / 10);
+      Serial.println(val_f);
+    }
   }
 }
 
@@ -432,6 +772,39 @@ uint32_t checksum(uint8_t *pdata, uint32_t length)
   return res;
 }
 
+uint32_t cal_checksum_32(uint32_t addr, uint32_t length)
+{
+  uint32_t res = 0, offset = addr, exceed, val;
+
+  while(offset < addr + length)
+  {
+    val = get_32_from_eeprom(eeprom_addr, offset);
+#if 1
+if (offset == addr) {
+      Serial.print("0x");
+      Serial.println(val, HEX);
+    }
+#endif
+    if (offset > addr + length - 4) {
+      exceed = offset + 4 - (addr + length);
+      if (exceed == 1) {
+        val &= 0xFFFFFF00;
+      } else if (exceed == 2) {
+        val &= 0xFFFF0000;
+      } else {
+        val &= 0xFF000000;
+      }
+      Serial.print("Last data: 0x");
+      Serial.println(val, HEX);
+    }
+    res += val;
+    offset += 4;
+  }
+  Serial.print("checksum_32: 0x");
+  Serial.println(res, HEX);
+
+  return res;
+}
 
 
 

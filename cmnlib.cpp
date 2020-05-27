@@ -23,8 +23,22 @@ void write_32_to_eeprom(int32_t bus_addr, uint32_t addr, uint32_t data)
 
 void write_byte_to_eeprom(int32_t bus_addr, uint32_t addr, unsigned char byte, uint32_t count)
 {
-  for (int i = 0; i < count; ++i) {
-    i2c_eeprom_write_byte(bus_addr, addr + i, byte);
-    delay(10);
+  uint32_t offset, every_len;
+  unsigned char buf[128];
+
+  memset(buf, byte, 128);
+  offset = 0;
+  while (offset < count) {
+    every_len = (offset + 128 < count) ? 128 : count - offset;
+    /*
+    Serial.print("Write ");
+    Serial.print(every_len, DEC);
+    Serial.print(" 0x");
+    Serial.print(byte, HEX);
+    Serial.print(" to 0x");
+    Serial.println(addr + offset, HEX);
+    */
+    i2c_eeprom_write_buffer(bus_addr, addr + offset, buf, every_len);
+    offset += every_len;
   }
 }

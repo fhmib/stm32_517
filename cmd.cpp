@@ -37,8 +37,10 @@ int32_t process_cmd(const char *buf)
   for (i=0;;i++) {
     if (strcmp(cmdlist[i].cmd, argv[0]) == 0)
       return cmdlist[i].callfn(argc, argv); 
-    if(strcmp(cmdlist[i].cmd, "help") == 0) 
-      return -1;   
+    if(strcmp(cmdlist[i].cmd, "help") == 0) {
+      Serial.println("Unknown command");
+      return -1;
+    }
   }
 
   return 0;

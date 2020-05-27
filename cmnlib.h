@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define MY_SUB(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
+
 //typedef uint32_t uint32_t;
 //typedef unsigned short uint16_t;
 //typedef unsigned char uint8_t;

@@ -25,6 +25,7 @@ void i2c_eeprom_write_byte(int32_t bus_addr, uint32_t addr, unsigned char data)
     Serial.print("I2C communication failed, error code = ");
     Serial.println(err);
   }
+  delay(10);
 
   digitalWrite(EEPROM_WP, HIGH);
 }
@@ -78,6 +79,7 @@ unsigned char i2c_eeprom_read_byte(int32_t bus_addr, uint32_t addr)
   Wire.requestFrom((int)bus_addr, 1);
   if (Wire.available()) 
     rdata = Wire.read();
+  delay(10);
 
   return rdata;
 }

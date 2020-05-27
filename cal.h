@@ -31,8 +31,21 @@ typedef struct {
   tag_attr tag_date;
 } tag_addr_stu;
 
-void table_init_for_364();
+typedef enum {
+  DUMP_MODE_IL,
+  DUMP_MODE_VOA,
+  DUMP_MODE_PD,
+  DUMP_MODE_VKB,
+  DUMP_MODE_VT,
+} DUMP_MODE;
+
+void table_init_for_364(void);
 int32_t cmd_table_init(int32_t argc, char **argv);
+void table_cplt(void);
+int32_t cmd_table_cplt(int32_t argc, char **argv);
+void table_backup(void);
+int32_t cmd_table_backup(int32_t argc, char **argv);
+
 int32_t cmd_file_name(int32_t argc, char **argv);
 int32_t cmd_file_version(int32_t argc, char **argv);
 
@@ -47,9 +60,13 @@ int32_t cmd_tag_sn(int32_t argc, char **argv);
 int32_t cmd_tag_date(int32_t argc, char **argv);
 int32_t cal_voa(int32_t argc, char **argv);
 int32_t cal_pd(int32_t argc, char **argv);
+int32_t cal_il(int32_t argc, char **argv);
+int32_t cal_vkb(int32_t argc, char **argv);
+int32_t cal_vt(int32_t argc, char **argv);
 int32_t cmd_cal(int32_t argc, char **argv);
-void dump_cali(uint32_t addr, uint32_t count);
+void dump_cali(uint32_t addr, uint32_t count, unsigned char mode);
 uint32_t checksum(uint8_t *pdata, uint32_t length);
+uint32_t cal_checksum_32(uint32_t addr, uint32_t length);
 
 
 
