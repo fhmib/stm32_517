@@ -1,4 +1,5 @@
 #include "dac.h"
+#include "cmnlib.h"
 
 extern int board_type;
 
@@ -100,7 +101,7 @@ int32_t cmd_dac(int32_t argc, char **argv)
     return 0;
   }
 
-  Serial.println("Wrong arg");
+  Serial.println(ARG_ERROR);
   return -1;
 }
 

@@ -170,25 +170,29 @@ int32_t cmd_eeprom(int32_t argc, char **argv)
   } else if (argc == 2 && !strcmp(argv[1], "dump")) {
     if (board_type == 364) {
       n = eeprom_length_for_364;
-      for (i = 0; i < n; ++i) {
-        c = i2c_eeprom_read_byte(eeprom_addr, i);
-        Serial.print(i,DEC);
-        Serial.print(",");
-        Serial.print(i,HEX);
-        Serial.print(",");
-        Serial.print(c, DEC);
-        Serial.print(",");
-        Serial.println(c, HEX);
-        if (i == 0x4F) i = 0x100 - 1;
-        else if (i == 0x104) i = 0x1000 - 1;
-        delay(10);
-      }
+    } else if (board_type == 517) {
+      n = eeprom_length_for_517;
+    } else if (board_type == 503) {
+      n = eeprom_length_for_503;
     } else {
       Serial.println(TECH_ERROR);
       return -1;
     }
+    for (i = 0; i < n; ++i) {
+      c = i2c_eeprom_read_byte(eeprom_addr, i);
+      Serial.print(i,DEC); Serial.print(","); Serial.print(i,HEX); Serial.print(",");
+      Serial.print(c, DEC); Serial.print(","); Serial.println(c, HEX);
+      if (board_type == 503) {
+        if (i == 0x4) i = 0x100 - 1;
+        else if (i == TAG_EXT_MODEL_503 + 20 - 1) i = 0x1000 - 1;
+      } else {
+        if (i == 0x4F) i = 0x100 - 1;
+        else if (i == 0x104) i = 0x1000 - 1;
+      }
+      delay(10);
+    }
   } else {
-    Serial.println("Wrong arg");
+    Serial.println(ARG_ERROR);
     return -1;
   }
 }

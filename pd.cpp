@@ -29,7 +29,6 @@ uint32_t voa_addr_364[] = { 0x271D, 0x2955, 0x1C05, 0x2075, 0x22AD, 0x24E5, 0x19
 uint32_t voa_cali_count_364 = 51;
 uint32_t voa_count_364 = 8;
 
-
 extern int board_type;
 extern int eeprom_addr;
 
@@ -70,12 +69,13 @@ int32_t cmd_pd(int32_t argc, char **argv)
     return 0;
   }
 
-  Serial.println("Wrong arg");
+  Serial.println(ARG_ERROR);
   return -1;
 }
 
 double get_pd(uint32_t pd_num)
 {
+  byte dst;
   int32_t channel, adc1, adc2, offset, pd_raw;
   double power1, power2;
   uint32_t *pd_addr_array = NULL;
@@ -147,14 +147,33 @@ double get_pd(uint32_t pd_num)
   Serial.print("PD raw data = ");
   Serial.println(pd_raw, DEC);
 
-  offset = 0;
   adc1 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1]);
+  adc2 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 8);
 
-  ++offset;
-  while ((adc2 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + offset * 8)) < pd_raw) {
-    if (++offset > pd_cali_count - 1)
-      break;
-    adc1 = adc2;
+  if (adc1 > adc2) {
+    dst = 1;
+  } else if (adc1 < adc2) {
+    dst = 0;
+  } else {
+    Serial.println("It needs calibration data in eeprom, read failed");
+    return 0;
+  }
+
+  offset = 1;
+  if (dst) {
+    while ((adc2 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + offset * 8)) > pd_raw) {
+      if (offset > pd_cali_count - 2)
+        break;
+      ++offset;
+      adc1 = adc2;
+    }
+  } else {
+    while ((adc2 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + offset * 8)) < pd_raw) {
+      if (offset > pd_cali_count - 2)
+        break;
+      ++offset;
+      adc1 = adc2;
+    }
   }
   power1 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + (offset - 1) * 8)) / 10;
   power2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + offset * 8)) / 10;
@@ -204,12 +223,13 @@ int32_t cmd_voa(int32_t argc, char **argv)
     return 0;
   }
 
-  Serial.println("Wrong arg");
+  Serial.println(ARG_ERROR);
   return -1;
 }
 
 double get_voa(uint32_t voa_num)
 {
+  byte dst;
   int32_t channel, adc1, adc2, offset, voa_raw;
   double atten1, atten2;
   uint32_t *voa_addr_array = NULL;
@@ -273,13 +293,34 @@ double get_voa(uint32_t voa_num)
   Serial.println(voa_raw, DEC);
 
   adc1 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1]);
-  offset = 1;
-  
-  while ((adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8)) > voa_raw) {
-    if (++offset > voa_cali_count - 1)
-      break;
-    adc1 = adc2;
+  adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 8);
+
+  if (adc1 > adc2) {
+    dst = 1;
+  } else if (adc1 < adc2) {
+    dst = 0;
+  } else {
+    Serial.println("It needs calibration data in eeprom, read failed");
+    return 0;
   }
+
+  offset = 1;
+  if (dst) {
+    while ((adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8)) > voa_raw) {
+      if (offset > voa_cali_count - 2)
+        break;
+      ++offset;
+      adc1 = adc2;
+    }
+  } else {
+    while ((adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8)) < voa_raw) {
+      if (offset > voa_cali_count - 2)
+        break;
+      ++offset;
+      adc1 = adc2;
+    }
+  }
+
   atten1 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + (offset - 1) * 8)) / 10;
   atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10;
 
@@ -304,6 +345,7 @@ double get_voa(uint32_t voa_num)
 
 void set_voa(uint32_t voa_num, double atten)
 {
+  byte dst;
   int32_t channel, adc1, adc2, adc_act, offset;
   double atten1, atten2;
   uint32_t *voa_addr_array = NULL;
@@ -371,12 +413,32 @@ void set_voa(uint32_t voa_num, double atten)
   }
 
   atten1 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4)) / 10;
+  atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + 8)) / 10;
+
+  if (atten2 > atten1) {
+    dst = 1;
+  } else if (atten2 < atten1) {
+    dst = 0;
+  } else {
+    Serial.println("It needs calibration data in eeprom, read failed");
+    return;
+  }
+
   offset = 1;
-  
-  while ((atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10) < atten) {
-    if (++offset > voa_cali_count - 1)
-      break;
-    atten1 = atten2;
+  if (dst) {
+    while ((atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10) < atten) {
+      if (offset > voa_cali_count - 2)
+        break;
+      ++offset;
+      atten1 = atten2;
+    }
+  } else {
+    while ((atten2 = (double)((int32_t)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10) > atten) {
+      if (offset > voa_cali_count - 2)
+        break;
+      ++offset;
+      atten1 = atten2;
+    }
   }
   adc1 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + (offset - 1) * 8);
   adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8);
@@ -397,10 +459,14 @@ void set_voa(uint32_t voa_num, double atten)
     return;
   }
 
-  if (atten > atten2) {
+  if (atten > atten2 && dst == 1) {
     Serial.println("Attenuation value exceeds limitation"); 
     adc_act = adc2;
     atten = atten2;
+  } else if (atten > atten1 && dst == 0) {
+    Serial.println("Attenuation value exceeds limitation"); 
+    adc_act = adc1;
+    atten = atten1;
   } else {
     adc_act = (atten - atten1) * (adc2 - adc1) / (atten2 - atten1) + adc1;
   }
@@ -418,56 +484,54 @@ int32_t cmd_switch(int32_t argc, char **argv)
 {
   uint32_t switch_num;
   uint32_t switch_state;
-  byte out_pin, in_pin;
 
   if (argc < 3) {
-    Serial.println("Wrong arg");
+    Serial.println(ARG_ERROR);
     return -1;
   }
 
+  switch_num = strtoul(argv[1], NULL, 0);
   if (board_type == 364) {
-    switch_num = strtoul(argv[1], NULL, 0);
     if (switch_num != 1) {
       Serial.println("Invalid switch number");
       return -1;
     }
-    out_pin = PB13;
-    pinMode(out_pin, OUTPUT);
-    in_pin = PB9;
-    pinMode(in_pin, INPUT);
   } else {
     Serial.println(TECH_ERROR);
     return -1;
   }
 
   if (argc == 3 && !strcmp(argv[2], "read")) {
-    switch_state = digitalRead(in_pin);
-    if (switch_state == 0) {
-      Serial.println("Switch is set to LIN2");
-    } else {
-      Serial.println("Switch is set to LIN1");
+    if (board_type == 364) {
+      switch_state = digitalRead(SW_STAT_1);
+      if (switch_state == 0) {
+        Serial.println("Switch is set to LIN2");
+      } else {
+        Serial.println("Switch is set to LIN1");
+      }
     }
     return 0;
   } else if (argc == 4 && !strcmp(argv[2], "write")) {
-    switch_state = strtoul(argv[3], NULL, 0);
-    if (switch_state == 0 || switch_state > 2) {
-      Serial.println("Invalid switch state");
-      return -1;
+    if (board_type == 364) {
+      switch_state = strtoul(argv[3], NULL, 0);
+      if (switch_state == 0 || switch_state > 2) {
+        Serial.println("Invalid switch state");
+        return -1;
+      }
+  
+      Serial.print("Switch to ");
+      if (switch_state == 1) {
+        digitalWrite(SW_CTL_1, HIGH);
+        Serial.print("LIN1");
+      } else {
+        digitalWrite(SW_CTL_1, LOW);
+        Serial.print("LIN2");
+      }
+      Serial.println(" OK");
     }
-
-    if (switch_state == 1) {
-      digitalWrite(out_pin, HIGH); //LIN1
-    } else {
-      digitalWrite(out_pin, LOW); //LIN2
-    }
-
-    Serial.print("Switch to ");
-    Serial.print(switch_state);
-    Serial.println(" OK");
-
     return 0;
   }
 
-  Serial.println("Wrong arg");
+  Serial.println(ARG_ERROR);
   return -1;
 }

@@ -12,7 +12,7 @@ int32_t cmd_adc(int32_t argc, char **argv);
 uint32_t ReadChannelDigital(byte chanIdx);
 
 // KTA7828
-#define KTA7828_ADDR 0x4B
+#define ADC_ADDR_503 0x4B
 
 int32_t cmd_adc_7828(int32_t argc, char **argv);
 uint32_t get_adc_7828(byte chanIdx);

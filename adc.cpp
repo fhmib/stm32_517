@@ -1,4 +1,7 @@
 #include "adc.h"
+#include "cmnlib.h"
+
+extern int32_t board_type;
 
 int32_t cmd_adc(int32_t argc, char **argv)
 {
@@ -20,7 +23,7 @@ int32_t cmd_adc(int32_t argc, char **argv)
     return 0;
   }
 
-  Serial.println("Wrong arg");
+  Serial.println(ARG_ERROR);
   return -1;
 }
 
@@ -75,34 +78,35 @@ int32_t cmd_adc_7828(int32_t argc, char **argv)
     return 0;
   }
 
-  Serial.println("Wrong arg");
+  Serial.println(ARG_ERROR);
   return -1;
 }
 
 uint32_t get_adc_7828(byte chanIdx)
 {
   int32_t offset, error, i = 0;
+  int adc_addr;
   char adc[2];
+
+  if (board_type == 503) {
+    adc_addr = ADC_ADDR_503;
+  } else {
+    Serial.println(TECH_ERROR);
+    return 0;
+  }
 
   offset = 4 * (chanIdx % 2) + chanIdx / 2;
   offset = 0x84 | (offset << 4);
   //Serial.print("offset = 0x");
   //Serial.println(offset, HEX);
-#if 0
-  Wire.beginTransmission(KTA7828_ADDR);
-  Wire.write(offset);
-  error = Wire.endTransmission();
-  
-  delay(5);
-  Wire.requestFrom(KTA7828_ADDR, 2);
-#else
-  error = Wire.CombinedTrans(KTA7828_ADDR, offset, 1, 2);
+
+  error = Wire.CombinedTrans(adc_addr, offset, 1, 2);
   if (error) {
     Serial.print("Error occured while i2c combined transmission, error = ");
     Serial.println(error);
     return 0;
   }
-#endif
+
   i = 0;
   while(Wire.available())
   {

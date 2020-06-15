@@ -1,4 +1,5 @@
 #include "cmd.h"
+#include "cmnlib.h"
 #include <HardwareSerial.h>
 
 int32_t cmd_help(int32_t argc, char **argv)
@@ -6,6 +7,8 @@ int32_t cmd_help(int32_t argc, char **argv)
   int32_t i;
   for (i=0;;i++)
   {
+    if (!strcmp(cmdlist[i].info, "INTERNAL")) continue;
+
     Serial.print("cmd: ");
     Serial.println(cmdlist[i].cmd);
     Serial.print("     usage:   ");

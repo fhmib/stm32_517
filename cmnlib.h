@@ -9,7 +9,9 @@
 //typedef unsigned short uint16_t;
 //typedef unsigned char uint8_t;
 
+extern const char *SUPPORT_BOARD;
 extern const char *TECH_ERROR;
+extern const char *ARG_ERROR;
 
 uint32_t switch_endian(uint32_t i);
 uint32_t get_32_from_eeprom(int32_t bus_addr, uint32_t addr);

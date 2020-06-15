@@ -4,18 +4,32 @@
 #include <stdint.h>
 
 extern uint32_t eeprom_length_for_364;
+extern uint32_t eeprom_length_for_517;
+extern uint32_t eeprom_length_for_503;
 
-// for 364
+// for 364 & 517
 typedef enum {
   TAG_PN_364 = 0x0,
   TAG_VENDOR_364 = 0x10,
   TAG_MODEL_364 = 0x20,
   TAG_SN_364 = 0x30,
-  TAG_DATE_364 =0x40,
+  TAG_DATE_364 = 0x40,
 } TAG_ADDR_364;
 void tag_init_for_364(void);
 
+// for 503
+typedef enum {
+  TAG_MODEL_503 = 0x100,
+  TAG_PN_503 = TAG_MODEL_503 + 20,
+  TAG_SN_503 = TAG_PN_503 + 20,
+  TAG_DESC_503 = TAG_SN_503 + 20,
+  TAG_DATE_503 = TAG_DESC_503 + 200,
+  TAG_VENDOR_503 = TAG_DATE_503 + 12,
+  TAG_EXT_MODEL_503 = TAG_VENDOR_503 + 20,
+} TAG_ADDR_503;
 
+void tag_init_for_364(void);
+void tag_init_for_503(void);
 
 // for all
 typedef struct {
@@ -29,6 +43,8 @@ typedef struct {
   tag_attr tag_model;
   tag_attr tag_sn;
   tag_attr tag_date;
+  tag_attr tag_desc;
+  tag_attr tag_ext_model;
 } tag_addr_stu;
 
 typedef enum {
@@ -40,6 +56,8 @@ typedef enum {
 } DUMP_MODE;
 
 void table_init_for_364(void);
+void table_init_for_517(void);
+void table_init_for_503(void);
 int32_t cmd_table_init(int32_t argc, char **argv);
 void table_cplt(void);
 int32_t cmd_table_cplt(int32_t argc, char **argv);
@@ -50,7 +68,7 @@ int32_t cmd_file_name(int32_t argc, char **argv);
 int32_t cmd_file_version(int32_t argc, char **argv);
 
 int32_t tag_write(uint32_t addr, char* buf, int32_t length);
-int32_t tag_read(uint32_t addr, int32_t lenth);
+int32_t tag_read(uint32_t addr, int32_t length);
 int32_t tag_process(int32_t argc, char **argv, uint32_t addr, int32_t size);
 
 int32_t cmd_tag_pn(int32_t argc, char **argv);
@@ -58,6 +76,8 @@ int32_t cmd_tag_vendor(int32_t argc, char **argv);
 int32_t cmd_tag_model(int32_t argc, char **argv);
 int32_t cmd_tag_sn(int32_t argc, char **argv);
 int32_t cmd_tag_date(int32_t argc, char **argv);
+int32_t cmd_tag_desc(int32_t argc, char **argv);
+int32_t cmd_tag_ext_model(int32_t argc, char **argv);
 int32_t cal_voa(int32_t argc, char **argv);
 int32_t cal_pd(int32_t argc, char **argv);
 int32_t cal_il(int32_t argc, char **argv);
@@ -66,14 +86,7 @@ int32_t cal_vt(int32_t argc, char **argv);
 int32_t cmd_cal(int32_t argc, char **argv);
 void dump_cali(uint32_t addr, uint32_t count, unsigned char mode);
 uint32_t checksum(uint8_t *pdata, uint32_t length);
+uint32_t cal_checksum_8(uint32_t addr, uint32_t length);
 uint32_t cal_checksum_32(uint32_t addr, uint32_t length);
-
-
-
-
-#if 0
-int cmd_cal_init_517(int argc, char **argv);
-int cmd_cal_init_364(int argc, char **argv);
-#endif
 
 #endif
