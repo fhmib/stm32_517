@@ -105,12 +105,12 @@ console_cmd cmdlist_517[] =
   {"tag_model", cmd_tag_model, "tag_model write <content>, tag_model read", "tag_model write model-1, tag_model read"},
   {"tag_sn", cmd_tag_sn, "tag_sn write <content>, tag_sn read", "tag_sn write 123456, tag_sn read"},
   {"tag_date", cmd_tag_date, "tag_date write <content>, tag_date read", "tag_date write 20200202, tag_date read"},
-  {"table_init", cmd_table_init, "cmd_table_init", "cmd_table_init"},
+  {"table_init", cmd_table_init, "table_init", "table_init"},
   {"file_name", cmd_file_name, "file_name write <name>", "file_name write M+3.PAR"},
   {"file_version", cmd_file_version, "file_version write <year> <> ...", "file_version write 2020 5 24 16 34 0 0"},
   {"cal", cmd_cal, "cal voa<num>/pd<num>/... <point_num> <adc> <value>, cal voa<num>/pd<num>/... dump", "cal voa3 2 2034 4.5, cal voa3 dump"},
-  {"table_cplt", cmd_table_cplt, "cmd_table_init", "cmd_table_init"},
-  {"table_backup", cmd_table_backup, "cmd_table_init", "cmd_table_init"},
+  {"table_cplt", cmd_table_cplt, "table_cplt", "table_cplt"},
+  {"table_backup", cmd_table_backup, "table_backup", "table_backup"},
 
   {"dac", cmd_dac, "dac <channel> write <value>, dac read", "dac 1 write 1300, dac read"},
   {"adc", cmd_adc, "adc <channel> read", "adc 0 read"},
@@ -134,9 +134,9 @@ console_cmd cmdlist_503[] =
   {"tag_vendor", cmd_tag_vendor, "tag_vendor write <content>, tag_vendor read", "tag_vendor write o-net, tag_vendor read"},
   {"tag_ext_model", cmd_tag_ext_model, "tag_ext_model write <content>, tag_ext_model read", "tag_ext_model write Emodel-1, tag_ext_model read"},
   {"file_version", cmd_file_version, "file_version write <year> <> ...", "file_version write 2020 5 24 16 34 0 0"},
-  {"table_init", cmd_table_init, "cmd_table_init", "cmd_table_init"},
+  {"table_init", cmd_table_init, "table_init", "table_init"},
   {"cal", cmd_cal, "cal pd<num>/il <point_num> [adc] <value>, cal pd<num>/il dump", "cal pd3 2 2034 4.5, cal pd3 dump"},
-  {"table_cplt", cmd_table_cplt, "cmd_table_init", "cmd_table_init"},
+  {"table_cplt", cmd_table_cplt, "table_cplt", "table_cplt"},
 
   {"adc", cmd_adc_7828, "adc <channel> read", "adc 0 read"},
   {"eeprom", cmd_eeprom, "eeprom read <addr> <length>, eeprom write <addr> <val>", "eeprom read 0x0 10, eeprom write 0x0 0x10"},
@@ -155,12 +155,12 @@ console_cmd cmdlist_364[] =
   {"tag_model", cmd_tag_model, "tag_model write <content>, tag_model read", "tag_model write model-1, tag_model read"},
   {"tag_sn", cmd_tag_sn, "tag_sn write <content>, tag_sn read", "tag_sn write 123456, tag_sn read"},
   {"tag_date", cmd_tag_date, "tag_date write <content>, tag_date read", "tag_date write 20200202, tag_date read"},
-  {"table_init", cmd_table_init, "cmd_table_init", "cmd_table_init"},
+  {"table_init", cmd_table_init, "table_init", "table_init"},
   {"file_name", cmd_file_name, "file_name write <name>", "file_name write M+3.PAR"},
   {"file_version", cmd_file_version, "file_version write <year> <> ...", "file_version write 2020 5 24 16 34 0 0"},
   {"cal", cmd_cal, "cal voa<num>/pd<num>/... <point_num> <adc> <value>, cal voa<num>/pd<num>/... dump", "cal voa3 2 2034 4.5, cal voa3 dump"},
-  {"table_cplt", cmd_table_cplt, "cmd_table_init", "cmd_table_init"},
-  {"table_backup", cmd_table_backup, "cmd_table_init", "cmd_table_init"},
+  {"table_cplt", cmd_table_cplt, "table_cplt", "table_cplt"},
+  {"table_backup", cmd_table_backup, "table_backup", "table_backup"},
 
   {"dac", cmd_dac, "dac <channel> write <value>, dac read", "dac 1 write 1300, dac read"},
   {"adc", cmd_adc, "adc <channel> read", "adc 0 read"},
@@ -179,6 +179,8 @@ void get_board_type(const char *buf)
 {
   if (!strcmp("517", buf)) {
     board_type = 517;
+  } else if (!strcmp("573", buf)) {
+    board_type = 573;
   } else if (!strcmp("503", buf)) {
     board_type = 503;
   } else if (!strcmp("364", buf)) {
@@ -188,7 +190,7 @@ void get_board_type(const char *buf)
 
 void board_init()
 {
-  if (board_type == 517) {
+  if (board_type == 517 || board_type == 573) {
     // Same with 364
     tag_init_for_364();
     memcpy(cmdlist, cmdlist_517, sizeof(cmdlist_517));

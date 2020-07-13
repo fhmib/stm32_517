@@ -13,6 +13,11 @@ uint32_t voa_addr_517[] = { 0x15E5, 0x181D };
 uint32_t voa_cali_count_517 = 51;
 uint32_t voa_count_517 = 2;
 
+// for 573
+uint32_t voa_rb_addr_573[] = { 0x1A55, 0x1C8D };
+uint32_t voa_rb_cali_count_573 = 51;
+uint32_t voa_rb_count_573 = 2;
+
 // for 503
   // PD1 = 0x150D, PD2 = 0x11AD, PD3 = 0x12CD
 uint32_t pd_addr_503[] = { 0x150D, 0x11AD, 0x12CD };
@@ -38,7 +43,7 @@ int32_t cmd_pd(int32_t argc, char **argv)
   uint32_t pd_count = 0;
   double pd;
 
-  if (board_type == 517) {
+  if (board_type == 517 || board_type == 573) {
     pd_count = pd_count_517;
   } else if (board_type == 503) {
     pd_count = pd_count_503;
@@ -81,7 +86,7 @@ double get_pd(uint32_t pd_num)
   uint32_t *pd_addr_array = NULL;
   uint32_t pd_cali_count;
 
-  if (board_type == 517) {
+  if (board_type == 517 || board_type == 573) {
     pd_addr_array = pd_addr_517;
     pd_cali_count = pd_cali_count_517;
     switch(pd_num) {
@@ -137,7 +142,7 @@ double get_pd(uint32_t pd_num)
     return 0;
   }
 
-  if (board_type == 517 || board_type == 364) {
+  if (board_type == 517 || board_type == 364 || board_type == 573) {
     pd_raw = ReadChannelDigital((byte)channel);
   } else if (board_type == 503) {
     pd_raw = get_adc_7828((byte)channel);
@@ -192,7 +197,7 @@ int32_t cmd_voa(int32_t argc, char **argv)
   uint32_t voa_count = 0;
   double atten;
 
-  if (board_type == 517) {
+  if (board_type == 517 || board_type == 573) {
     voa_count = voa_count_517;
   } else if (board_type == 364) {
     voa_count = voa_count_364;
@@ -249,6 +254,20 @@ double get_voa(uint32_t voa_num)
       Serial.println("Invalid voa_num");
       return 0;
     }
+  } else if (board_type == 573) {
+    voa_addr_array = voa_rb_addr_573;
+    voa_cali_count = voa_rb_cali_count_573;
+    switch(voa_num) {
+    case 1:
+      channel = 1;
+      break;
+    case 2:
+      channel = 2;
+      break;
+    default:
+      Serial.println("Invalid voa_num");
+      return 0;
+    }
   } else if (board_type == 364) {
     voa_addr_array = voa_addr_364;
     voa_cali_count = voa_cali_count_364;
@@ -286,7 +305,7 @@ double get_voa(uint32_t voa_num)
     return 0;
   }
 
-  if (board_type == 517 || board_type == 364) {
+  if (board_type == 517 || board_type == 364 || board_type == 573) {
     voa_raw = ReadChannelDigital((byte)channel);
   }
   Serial.print("VOA raw data = ");
@@ -352,7 +371,7 @@ void set_voa(uint32_t voa_num, double atten)
   uint32_t voa_cali_count;
   byte dac_addr;
 
-  if (board_type == 517) {
+  if (board_type == 517 || board_type == 573) {
     voa_addr_array = voa_addr_517;
     voa_cali_count = voa_cali_count_517;
     switch(voa_num) {

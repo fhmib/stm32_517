@@ -1,7 +1,7 @@
 #include "cmnlib.h"
 #include "eeprom.h"
 
-const char *SUPPORT_BOARD = "Supported boards: 503 517 364";
+const char *SUPPORT_BOARD = "Supported boards: 503 517 364 573";
 const char *TECH_ERROR = "SERIOUS ERROR: Invalid board type! Please inform the technician";
 const char *ARG_ERROR = "Wrong arg";
 

@@ -172,6 +172,8 @@ int32_t cmd_eeprom(int32_t argc, char **argv)
       n = eeprom_length_for_364;
     } else if (board_type == 517) {
       n = eeprom_length_for_517;
+    } else if (board_type == 573) {
+      n = eeprom_length_for_573;
     } else if (board_type == 503) {
       n = eeprom_length_for_503;
     } else {

@@ -6,6 +6,7 @@
 extern uint32_t eeprom_length_for_364;
 extern uint32_t eeprom_length_for_517;
 extern uint32_t eeprom_length_for_503;
+extern uint32_t eeprom_length_for_573;
 
 // for 364 & 517
 typedef enum {
@@ -57,6 +58,7 @@ typedef enum {
 
 void table_init_for_364(void);
 void table_init_for_517(void);
+void table_init_for_573(void);
 void table_init_for_503(void);
 int32_t cmd_table_init(int32_t argc, char **argv);
 void table_cplt(void);
@@ -79,6 +81,7 @@ int32_t cmd_tag_date(int32_t argc, char **argv);
 int32_t cmd_tag_desc(int32_t argc, char **argv);
 int32_t cmd_tag_ext_model(int32_t argc, char **argv);
 int32_t cal_voa(int32_t argc, char **argv);
+int32_t cal_voa_rb(int32_t argc, char **argv);
 int32_t cal_pd(int32_t argc, char **argv);
 int32_t cal_il(int32_t argc, char **argv);
 int32_t cal_vkb(int32_t argc, char **argv);
