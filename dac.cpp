@@ -9,7 +9,7 @@ int32_t cmd_dac(int32_t argc, char **argv)
   uint32_t val;
 
   if (argc == 4 && !strcmp(argv[2], "write")) {
-    if (board_type == 517) {
+    if (board_type == 517 || board_type == 573) {
       if (!strcmp(argv[1], "1")) {
         channel = DAC_CHANNEL_A;
       } else if (!strcmp(argv[1], "2")) {
@@ -23,7 +23,7 @@ int32_t cmd_dac(int32_t argc, char **argv)
         return -1;
       }
       addr = DAC_ADDR_517;
-    } else if (board_type == 364) {
+    } else if (board_type == 364 || board_type == 419) {
       if (!strcmp(argv[1], "1")) {
         channel = DAC_CHANNEL_A;
         addr = DAC_ADDR_364_1;
@@ -70,7 +70,7 @@ int32_t cmd_dac(int32_t argc, char **argv)
   } else if (argc == 2 && !strcmp(argv[1], "read")) {
     byte buf[3];
 
-    if (board_type == 517) {
+    if (board_type == 517 || board_type == 573) {
       dac_read(DAC_ADDR_517, buf);
       Serial.print("Read from dac: 0x");
       Serial.print(buf[0], HEX);
@@ -78,7 +78,7 @@ int32_t cmd_dac(int32_t argc, char **argv)
       Serial.print(buf[1], HEX);
       Serial.print(" 0x");
       Serial.println(buf[2], HEX);
-    } else if (board_type == 364) {
+    } else if (board_type == 364 || board_type == 419) {
       dac_read(DAC_ADDR_364_1, buf);
       Serial.print("Read from dac 0xC: 0x");
       Serial.print(buf[0], HEX);

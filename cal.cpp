@@ -134,6 +134,110 @@ void table_init_for_364()
 
 }
 
+// for 419
+unsigned char cal_header2_for_419[] =      {   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x01,0x00,0x18,0x01,
+                                            0x0A,0x01,0x02,0x0A,0x01,0x03,0x0A,0x01,0x04,0x0A,0x01,0x05,0x0A,0x01,0x06,0x18,
+                                            0x00,0x07,0x10,0x01,0x08,0x10,0x01,0x09,0x33,0x01,0x0A,0x33,0x01,0x0B,0x33,0x01,
+                                            0x0C,0x33,0x01,0x0D,0x33,0x01,0x0E,0x33,0x01,0x0F,0x33,0x01,0x10,0x33,0x01,0x11,
+                                            0x33,0x01,0x12,0x33,0x01,0x13,0x33,0x01,0x14,0x33,0x01,0x15,0x33,0x01,0x16,0x33,
+                                            0x01,0x17,0x33,0x01,0x18,0x33,0x01};
+uint32_t cal_header2_length_419 = 87;
+
+uint32_t file_length_for_419 = 0x1A2D + 0x238 * 8;
+uint32_t eeprom_length_for_419 = 10989 + 0x238 * 8;
+
+char voa_rb_header_name_for_419[8][16] = {"VOA7_READBACK\n", "VOA8_READBACK\n", "VOA2_READBACK\n", "VOA4_READBACK\n",\
+                                          "VOA5_READBACK\n", "VOA6_READBACK\n", "VOA1_READBACK\n", "VOA3_READBACK\n"};
+
+extern uint32_t voa_rb_addr_419[];
+extern uint32_t voa_rb_cali_count_419;
+extern uint32_t voa_rb_count_419;
+
+void table_init_for_419()
+{
+  uint32_t sum, i, offset = 0;
+
+  // 0x100 ~ 0x104
+  write_byte_to_eeprom(eeprom_addr, 0x100, 0x3, 1);
+  write_32_to_eeprom(eeprom_addr, 0x101, 0x3C);
+
+  // EEPROM header 0x1000 ~ 0x103F
+  i2c_eeprom_write_buffer(eeprom_addr, EEPROM_HEADER_OFFSET, eeprom_header, 24);
+  write_byte_to_eeprom(eeprom_addr, EEPROM_HEADER_OFFSET + 24, 0, 60 - 24);
+  sum = checksum(eeprom_header, 24);
+  Serial.print("EEPROM header checksum = 0x");
+  Serial.println(sum, HEX);
+  write_32_to_eeprom(eeprom_addr, EEPROM_HEADER_OFFSET + 60, sum);
+  Serial.println("EEPROM header completed");
+
+  // file header 1 0x1040 ~ 0x106F
+  i2c_eeprom_write_buffer(eeprom_addr, FILE_HEADER_OFFSET1, file_header1, 16);
+  write_byte_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16, 0, 24);
+  write_32_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16 + 24, 0x06);
+  write_32_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16 + 24 + 4, file_length_for_419);
+
+  // file header 2 0x1070 ~ 0x10BF
+  write_byte_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET2, 0, 16 * 5);
+  Serial.println("file header completed");
+
+  // cal header 1 0x10C0 ~ 0x10DF
+  i2c_eeprom_write_buffer(eeprom_addr, CAL_HEADER_OFFSET1, cal_header, 32);
+
+  // cal header 2 0x10E0 ~ 0x113C
+  i2c_eeprom_write_buffer(eeprom_addr, CAL_HEADER_OFFSET2, cal_header2_for_419, cal_header2_length_419);
+  write_byte_to_eeprom(eeprom_addr, CAL_HEADER_OFFSET2 + cal_header2_length_419, 0, 0x113C - 0x10E0 + 1 - cal_header2_length_419);
+  Serial.println("cal header completed");
+
+  // pd table header
+  for (i = 0; i < pd_count_364; ++i) {
+    offset = pd_addr_364[i] - 0xA0;
+    write_byte_to_eeprom(eeprom_addr, offset, 0, 8);
+    offset += 8;
+    i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)pd_header_name_for_364[i], strlen(pd_header_name_for_364[i]));
+    offset += strlen(pd_header_name_for_364[i]);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, pd_addr_364[i] - offset + pd_cali_count_364 * 8);
+    offset = pd_addr_364[i] - 4 * 5;
+    write_32_to_eeprom(eeprom_addr, offset, pd_power_max_for_364[i]);
+    offset = pd_addr_364[i] - 4 * 2;
+    write_32_to_eeprom(eeprom_addr, offset, pd_power_min_for_364[i]);
+  }
+  Serial.println("pd header completed");
+
+  // voa table header
+  for (i = 0; i < voa_count_364; ++i) {
+    offset = voa_addr_364[i] - 0xA0;
+    write_byte_to_eeprom(eeprom_addr, offset, 0, 8);
+    offset += 8;
+    i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)voa_header_name_for_364[i], strlen(voa_header_name_for_364[i]));
+    offset += strlen(voa_header_name_for_364[i]);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, voa_addr_364[i] - offset + voa_cali_count_364 * 8);
+  }
+  Serial.println("voa header completed");
+
+  // voa readback table header
+  for (i = 0; i < voa_rb_count_419; ++i) {
+    offset = voa_rb_addr_419[i] - 0xA0;
+    write_byte_to_eeprom(eeprom_addr, offset, 0, 8);
+    offset += 8;
+    i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)voa_rb_header_name_for_419[i], strlen(voa_rb_header_name_for_419[i]));
+    offset += strlen(voa_rb_header_name_for_419[i]);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, voa_rb_addr_419[i] - offset + voa_rb_cali_count_419 * 8);
+  }
+  Serial.println("voa reabback header completed");
+
+  // other tables
+  for (i = 0; i < 3; ++i) {
+    offset = others_addr_364[i] - 0xA0;
+    write_byte_to_eeprom(eeprom_addr, offset, 0, 8);
+    offset += 8;
+    i2c_eeprom_write_buffer(eeprom_addr, offset, (unsigned char*)others_header_name_for_364[i], strlen(others_header_name_for_364[i]));
+    offset += strlen(others_header_name_for_364[i]);
+    write_byte_to_eeprom(eeprom_addr, offset, 0, others_addr_364[i] - offset + others_cali_count_364[i] * 8);
+  }
+  Serial.println("others header completed");
+
+}
+
 // for 517
 unsigned char cal_header2_for_517[] =      {   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,0x01,0x00,0x06,0x04,
                                             0x0A,0x01,0x05,0x0E,0x00,0x06,0x10,0x01,0x07,0x10,0x01,0x08,0x33,0x01,0x09,0x33,
@@ -271,7 +375,7 @@ void table_init_for_573()
   i2c_eeprom_write_buffer(eeprom_addr, FILE_HEADER_OFFSET1, file_header1, 16);
   write_byte_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16, 0, 24);
   write_32_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16 + 24, 0x06);
-  write_32_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16 + 24 + 4, file_length_for_517);
+  write_32_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET1 + 16 + 24 + 4, file_length_for_573);
 
   // file header 2 0x1070 ~ 0x10BF
   write_byte_to_eeprom(eeprom_addr, FILE_HEADER_OFFSET2, 0, 16 * 5);
@@ -426,6 +530,9 @@ int32_t cmd_table_init(int32_t argc, char **argv)
     if (board_type == 364) {
       table_init_for_364();
       return 0;
+    } else if (board_type == 419) {
+      table_init_for_419();
+      return 0;
     } else if (board_type == 517) {
       table_init_for_517();
       return 0;
@@ -456,7 +563,7 @@ void table_cplt()
   uint32_t obj_cali_count;
 
   // pd table header
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     obj_count = pd_count_364;
     obj_addr_array = pd_addr_364;
     obj_cali_count = pd_cali_count_364;
@@ -501,7 +608,7 @@ void table_cplt()
   Serial.println("pd table completed");
 
   // voa table header
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     obj_count = voa_count_364;
     obj_addr_array = voa_addr_364;
     obj_cali_count = voa_cali_count_364;
@@ -550,6 +657,11 @@ void table_cplt()
     obj_addr_array = voa_rb_addr_573;
     obj_cali_count = voa_rb_cali_count_573;
     skip_voa = 0;
+  } else if (board_type == 419) {
+    obj_count = voa_rb_count_419;
+    obj_addr_array = voa_rb_addr_419;
+    obj_cali_count = voa_rb_cali_count_419;
+    skip_voa = 0;
   } else {
     skip_voa = 1;
   }
@@ -586,6 +698,8 @@ void table_cplt()
   // calculate checksum
   if (board_type == 364) {
     file_length = file_length_for_364;
+  } else if (board_type == 419) {
+    file_length = file_length_for_419;
   } else if (board_type == 517) {
     file_length = file_length_for_517;
   } else if (board_type == 503) {
@@ -626,6 +740,8 @@ void table_backup()
 
   if (board_type == 364) {
     file_length = file_length_for_364 + 0xC0;
+  } else if (board_type == 419) {
+    file_length = file_length_for_419 + 0xC0;
   } else if (board_type == 517) {
     file_length = file_length_for_517 + 0xC0;
   } else if (board_type == 573) {
@@ -774,7 +890,7 @@ int32_t tag_write(uint32_t addr, char* buf, int32_t length)
     return -1;
   }
 
-  if (board_type == 364 || board_type == 517 || board_type == 573) {
+  if (board_type == 364 || board_type == 517 || board_type == 573 || board_type == 419) {
     pad = 0;
   } else if (board_type == 503) {
     pad = ' ';
@@ -875,7 +991,7 @@ int32_t cal_voa(int32_t argc, char **argv)
   int32_t atten;
   double atten_raw;
 
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     voa_addr_array = voa_addr_364;
     voa_cali_count = voa_cali_count_364;
     voa_count = voa_count_364;
@@ -938,6 +1054,10 @@ int32_t cal_voa_rb(int32_t argc, char **argv)
     voa_addr_array = voa_rb_addr_573;
     voa_cali_count = voa_rb_cali_count_573;
     voa_count = voa_rb_count_573;
+  } else if (board_type == 419) {
+    voa_addr_array = voa_rb_addr_419;
+    voa_cali_count = voa_rb_cali_count_419;
+    voa_count = voa_rb_count_419;
   } else {
     Serial.println(TECH_ERROR);
     return -1;
@@ -990,7 +1110,7 @@ int32_t cal_pd(int32_t argc, char **argv)
   int32_t power;
   double power_raw;
 
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     pd_addr_array = pd_addr_364;
     pd_cali_count = pd_cali_count_364;
     pd_count = pd_count_364;
@@ -1052,7 +1172,7 @@ int32_t cal_il(int32_t argc, char **argv)
   int32_t power;
   double power_raw;
 
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     il_addr = others_addr_364[0];
     il_cali_count = others_cali_count_364[0] * 2;
   } else if (board_type == 517 || board_type == 573) {
@@ -1109,7 +1229,7 @@ int32_t cal_vkb(int32_t argc, char **argv)
   float raw;
   uint32_t *pp = (uint32_t*)&raw;
 
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     vkb_addr = others_addr_364[1];
     vkb_cali_count = others_cali_count_364[1];
   } else if (board_type == 517 || board_type == 573) {
@@ -1169,7 +1289,7 @@ int32_t cal_vt(int32_t argc, char **argv)
   int32_t adc1, adc2;
 #endif
 
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     vt_addr = others_addr_364[2];
     vt_cali_count = others_cali_count_364[2];
   } else if (board_type == 517 || board_type == 573) {
@@ -1227,6 +1347,8 @@ int32_t cmd_cal(int32_t argc, char **argv)
   unsigned char cvoa = 0, cvoarb = 0, cpd = 0, cil = 0, cvkb = 0, cvt = 0;
   if (board_type == 364) {
     cvoa = 1; cpd = 1; cil = 1; cvkb = 1; cvt = 1; cvoarb = 0;
+  } else if (board_type == 419) {
+    cvoa = 1; cpd = 1; cil = 1; cvkb = 1; cvt = 1; cvoarb = 1;
   } else if (board_type == 517) {
     cvoa = 1; cpd = 1; cil = 1; cvkb = 1; cvt = 1; cvoarb = 0;
   } else if (board_type == 573) {

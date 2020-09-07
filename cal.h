@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 extern uint32_t eeprom_length_for_364;
+extern uint32_t eeprom_length_for_419;
 extern uint32_t eeprom_length_for_517;
 extern uint32_t eeprom_length_for_503;
 extern uint32_t eeprom_length_for_573;
@@ -16,7 +17,6 @@ typedef enum {
   TAG_SN_364 = 0x30,
   TAG_DATE_364 = 0x40,
 } TAG_ADDR_364;
-void tag_init_for_364(void);
 
 // for 503
 typedef enum {
@@ -57,6 +57,7 @@ typedef enum {
 } DUMP_MODE;
 
 void table_init_for_364(void);
+void table_init_for_419(void);
 void table_init_for_517(void);
 void table_init_for_573(void);
 void table_init_for_503(void);

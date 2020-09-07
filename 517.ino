@@ -7,7 +7,7 @@
 #include "cmnlib.h"
 
 #define LED_PORT PB12
-#define VER "0.1.5"
+#define VER "0.1.8"
 #define LED_HOLD_TIME 500 // ms
 
 uint32_t led_count;
@@ -179,6 +179,8 @@ void get_board_type(const char *buf)
 {
   if (!strcmp("517", buf)) {
     board_type = 517;
+  } else if (!strcmp("419", buf)) {
+    board_type = 419;
   } else if (!strcmp("573", buf)) {
     board_type = 573;
   } else if (!strcmp("503", buf)) {
@@ -199,7 +201,7 @@ void board_init()
     tag_init_for_503();
     memcpy(cmdlist, cmdlist_503, sizeof(cmdlist_503));
     eeprom_addr = EEPROM_ADDR_503;
-  } else if (board_type == 364) {
+  } else if (board_type == 364 || board_type == 419) {
     tag_init_for_364();
     memcpy(cmdlist, cmdlist_364, sizeof(cmdlist_364));
     eeprom_addr = EEPROM_ADDR_364;

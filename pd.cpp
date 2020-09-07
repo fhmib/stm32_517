@@ -26,13 +26,19 @@ uint32_t pd_count_503 = 3;
 
 // for 364
   // LIN1 = 0x11DD, LIN2 = 0x12CD, LOUT1 = 0x13BD, LOUT2 = 0x14AD, AM1 = 0x159D
-uint32_t pd_addr_364[] = { 0x11DD, 0x12CD, 0x13BD, 0x14AD, 0x159D};
+uint32_t pd_addr_364[] = { 0x11DD, 0x12CD, 0x13BD, 0x14AD, 0x159D };
 uint32_t pd_cali_count_364 = 10;
 uint32_t pd_count_364 = 5;
   // A_TM2 = 0x19CD, A_TM1 = 0x1C05, B_TM2 = 0x1E3D, B_TM1 = 0x2075, LOUT1 = 0x22AD, LOUT2 = 0x24E5, LIN1 = 0x271D, LIN2 = 0x2955
-uint32_t voa_addr_364[] = { 0x271D, 0x2955, 0x1C05, 0x2075, 0x22AD, 0x24E5, 0x19CD, 0x1E3D};
+uint32_t voa_addr_364[] = { 0x271D, 0x2955, 0x1C05, 0x2075, 0x22AD, 0x24E5, 0x19CD, 0x1E3D };
 uint32_t voa_cali_count_364 = 51;
 uint32_t voa_count_364 = 8;
+
+// for 419
+// voa_rb_addr_419[n] = voa_addr_364[n] + 0x11C0
+uint32_t voa_rb_addr_419[] = { 0x38DD, 0x3B15, 0x2DC5, 0x3235, 0x346D, 0x36A5, 0x2B8D, 0x2FFD };
+uint32_t voa_rb_cali_count_419 = 51;
+uint32_t voa_rb_count_419 = 8;
 
 extern int board_type;
 extern int eeprom_addr;
@@ -47,7 +53,7 @@ int32_t cmd_pd(int32_t argc, char **argv)
     pd_count = pd_count_517;
   } else if (board_type == 503) {
     pd_count = pd_count_503;
-  } else if (board_type == 364) {
+  } else if (board_type == 364 || board_type == 419) {
     pd_count = pd_count_364;
   } else {
     Serial.println(TECH_ERROR);
@@ -114,7 +120,7 @@ double get_pd(uint32_t pd_num)
       Serial.println("Invalid pd_num");
       return 0;
     }
-  } else if (board_type == 364) {
+  } else if (board_type == 364 || board_type == 419) {
     pd_addr_array = pd_addr_364;
     pd_cali_count = pd_cali_count_364;
     switch(pd_num) {
@@ -142,7 +148,7 @@ double get_pd(uint32_t pd_num)
     return 0;
   }
 
-  if (board_type == 517 || board_type == 364 || board_type == 573) {
+  if (board_type == 517 || board_type == 364 || board_type == 573 || board_type == 419) {
     pd_raw = ReadChannelDigital((byte)channel);
   } else if (board_type == 503) {
     pd_raw = get_adc_7828((byte)channel);
@@ -199,7 +205,7 @@ int32_t cmd_voa(int32_t argc, char **argv)
 
   if (board_type == 517 || board_type == 573) {
     voa_count = voa_count_517;
-  } else if (board_type == 364) {
+  } else if (board_type == 364 || board_type == 419) {
     voa_count = voa_count_364;
   } else {
     Serial.println(TECH_ERROR);
@@ -300,12 +306,44 @@ double get_voa(uint32_t voa_num)
       Serial.println("Invalid voa_num");
       return 0;
     }
+  } else if (board_type == 419) {
+    voa_addr_array = voa_rb_addr_419;
+    voa_cali_count = voa_rb_cali_count_419;
+    switch(voa_num) {
+    case 1:
+      channel = 11;
+      break;
+    case 2:
+      channel = 12;
+      break;
+    case 3:
+      channel = 6;
+      break;
+    case 4:
+      channel = 8;
+      break;
+    case 5:
+      channel = 9;
+      break;
+    case 6:
+      channel = 10;
+      break;
+    case 7:
+      channel = 5;
+      break;
+    case 8:
+      channel = 7;
+      break;
+    default:
+      Serial.println("Invalid voa_num");
+      return 0;
+    }
   } else {
     Serial.println(TECH_ERROR);
     return 0;
   }
 
-  if (board_type == 517 || board_type == 364 || board_type == 573) {
+  if (board_type == 517 || board_type == 364 || board_type == 573 || board_type == 419) {
     voa_raw = ReadChannelDigital((byte)channel);
   }
   Serial.print("VOA raw data = ");
@@ -386,7 +424,7 @@ void set_voa(uint32_t voa_num, double atten)
       return;
     }
     dac_addr = DAC_ADDR_517;
-  } else if (board_type == 364) {
+  } else if (board_type == 364 || board_type == 419) {
     voa_addr_array = voa_addr_364;
     voa_cali_count = voa_cali_count_364;
     switch(voa_num) {
@@ -510,7 +548,7 @@ int32_t cmd_switch(int32_t argc, char **argv)
   }
 
   switch_num = strtoul(argv[1], NULL, 0);
-  if (board_type == 364) {
+  if (board_type == 364 || board_type == 419) {
     if (switch_num != 1) {
       Serial.println("Invalid switch number");
       return -1;
@@ -521,7 +559,7 @@ int32_t cmd_switch(int32_t argc, char **argv)
   }
 
   if (argc == 3 && !strcmp(argv[2], "read")) {
-    if (board_type == 364) {
+    if (board_type == 364 || board_type == 419) {
       switch_state = digitalRead(SW_STAT_1);
       if (switch_state == 0) {
         Serial.println("Switch is set to LIN2");
@@ -531,7 +569,7 @@ int32_t cmd_switch(int32_t argc, char **argv)
     }
     return 0;
   } else if (argc == 4 && !strcmp(argv[2], "write")) {
-    if (board_type == 364) {
+    if (board_type == 364 || board_type == 419) {
       switch_state = strtoul(argv[3], NULL, 0);
       if (switch_state == 0 || switch_state > 2) {
         Serial.println("Invalid switch state");

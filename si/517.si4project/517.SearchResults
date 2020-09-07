@@ -1,0 +1,22 @@
+---- eeprom_addr Matches (21 in 3 files) ----
+517.ino line 16 : extern eeprom_addr;
+517.ino line 144 :     eeprom_addr = EEPROM_ADDR_517;
+517.ino line 147 :     eeprom_addr = EEPROM_ADDR_503;
+517.ino line 151 :     eeprom_addr = EEPROM_ADDR_364;
+eeprom.cpp line 7 : int eeprom_addr;
+cmd_eeprom in eeprom.cpp :   int eeprom_addr;
+cmd_eeprom in eeprom.cpp :     i2c_eeprom_read_buffer2(eeprom_addr, addr, eeprom_buf, n);
+cmd_eeprom in eeprom.cpp :     i2c_eeprom_write_byte(eeprom_addr, addr, c);
+pd.cpp line 34 : extern eeprom_addr;
+get_pd in pd.cpp :   adc1 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1]);
+get_pd in pd.cpp :   while ((adc2 = get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + offset * 8)) < pd_raw) {
+get_pd in pd.cpp :   power1 = (double)((int)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + (offset - 1) * 8)) / 10;
+get_pd in pd.cpp :   power2 = (double)((int)get_32_from_eeprom(eeprom_addr, pd_addr_array[pd_num - 1] + 4 + offset * 8)) / 10;
+get_voa in pd.cpp :   adc1 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1]);
+get_voa in pd.cpp :   while ((adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8)) > voa_raw) {
+get_voa in pd.cpp :   atten1 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + (offset - 1) * 8)) / 10;
+get_voa in pd.cpp :   atten2 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10;
+set_voa in pd.cpp :   atten1 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4)) / 10;
+set_voa in pd.cpp :   while ((atten2 = (double)((int)get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + 4 + offset * 8)) / 10) < atten) {
+set_voa in pd.cpp :   adc1 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + (offset - 1) * 8);
+set_voa in pd.cpp :   adc2 = get_32_from_eeprom(eeprom_addr, voa_addr_array[voa_num - 1] + offset * 8);
